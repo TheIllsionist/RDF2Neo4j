@@ -1,7 +1,7 @@
 package Test;
 
-import CypherElement.CypherNode;
-import CypherElement.PropValPair;
+import CypherElement.Basic.CypherNode;
+import CypherElement.Basic.PropValPair;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

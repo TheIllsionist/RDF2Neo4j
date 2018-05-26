@@ -1,4 +1,4 @@
-package CypherElement;
+package CypherElement.Basic;
 
 public class CypherLeftRelationship extends CypherRelationship{
     public String toCypherStr(){

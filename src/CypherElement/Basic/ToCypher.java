@@ -1,4 +1,4 @@
-package CypherElement;
+package CypherElement.Basic;
 
 /**
  * 实现此接口的类都必须可以被转化为合法的Cypher查询语句片段

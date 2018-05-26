@@ -1,4 +1,4 @@
-package CypherElement;
+package CypherElement.Basic;
 
 public enum  Operator{
     EQ_TO,  //等于

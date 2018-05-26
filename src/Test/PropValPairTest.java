@@ -1,7 +1,7 @@
 package Test;
-import CypherElement.DataType;
-import CypherElement.Operator;
-import CypherElement.PropValPair;
+import CypherElement.Basic.DataType;
+import CypherElement.Basic.Operator;
+import CypherElement.Basic.PropValPair;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

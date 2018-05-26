@@ -1,4 +1,4 @@
-package CypherElement;
+package CypherElement.Basic;
 
 import java.util.LinkedList;
 

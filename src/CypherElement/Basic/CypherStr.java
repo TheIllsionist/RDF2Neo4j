@@ -1,4 +1,4 @@
-package CypherElement;
+package CypherElement.Basic;
 
 abstract class CypherStr implements ToCypher {
 

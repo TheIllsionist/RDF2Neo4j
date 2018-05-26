@@ -1,4 +1,4 @@
-package CypherElement;
+package CypherElement.Basic;
 
 /**
  * Neo4j中Property取值的数据类型
