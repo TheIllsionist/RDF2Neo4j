@@ -1,7 +1,6 @@
 package CypherElement.Basic;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
-
 import java.util.Set;
 
 /**
