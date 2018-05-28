@@ -100,7 +100,7 @@ public class CypherResourceLoader{
             case OWL_OBJECTPROPERTY:builder.append("OWL_OBJECTPROPERTY ");break;
             case OWL_NAMEDINDIVIDUAL:builder.append("OWL_NAMEDINDIVIDUAL ");break;
         }
-        builder.append("{preLabel:\"" + getPreLabel(resource.getURI()) + "\"} return count(n) ");
+        builder.append("{preLabel:\"" + getPreLabel(resource.getURI()) + "\"} return id(n) ");
         String finalCypher = builder.toString();
         StatementResult mRst = getSession().run(finalCypher);
         if(mRst.hasNext()){
