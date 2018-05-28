@@ -84,6 +84,31 @@ public class CypherResourceLoader{
         return result;
     }
 
+    /**
+     * 根据某资源的preLabel检查图数据库中是否已有该资源(目前该方法仅仅用在对类资源和属性资源的检查上)
+     * @param resource
+     * @param word
+     * @return
+     * @throws Exception
+     */
+    private boolean isResourceExisted(OntResource resource,Words word) throws Exception{
+        StringBuilder builder = new StringBuilder();
+        builder.append("match(n");
+        switch (word){
+            case OWL_CLASS:builder.append(":OWL_CLASS ");break;
+            case OWL_DATATYPEPROPERTY:builder.append(":OWL_DATATYPEPROPERTY ");break;
+            case OWL_OBJECTPROPERTY:builder.append("OWL_OBJECTPROPERTY ");break;
+            case OWL_NAMEDINDIVIDUAL:builder.append("OWL_NAMEDINDIVIDUAL ");break;
+        }
+        builder.append("{preLabel:\"" + getPreLabel(resource.getURI()) + "\"} return count(n) ");
+        String finalCypher = builder.toString();
+        StatementResult mRst = getSession().run(finalCypher);
+        if(mRst.hasNext()){
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * 将某个OWL类作为Node节点写入Neo4j,该节点目前有两个属性uri和preLabel
@@ -92,7 +117,10 @@ public class CypherResourceLoader{
      * @param provider
      * @return
      */
-    private int loadClassAsNode(OntClass ontClass,FileRdfProvider provider) {
+    private void loadClassAsNode(OntClass ontClass,FileRdfProvider provider) throws Exception {
+        if(isResourceExisted(ontClass,Words.OWL_CLASS)){
+            return;
+        }
         String uri = ontClass.getURI();
         String preLabel = getPreLabel(uri);
         HashSet<String> labels = (HashSet<String>)provider.allLabelsOf(ontClass);
@@ -113,14 +141,13 @@ public class CypherResourceLoader{
         }
         cypherbd.append("return id(n)");
         String finalCypher = cypherbd.toString();
-        int result = getSession().writeTransaction(new TransactionWork<Integer>() {
+        getSession().writeTransaction(new TransactionWork<Integer>() {
             @Override
             public Integer execute(Transaction transaction) {
                 StatementResult mRst = transaction.run(finalCypher);
                 return mRst.single().get(0).asInt();
             }
         });
-        return result;
     }
 
     /**
@@ -130,7 +157,14 @@ public class CypherResourceLoader{
      * @param provider
      * @return
      */
-    private int loadPropertyAsNode(OntProperty ontProperty,FileRdfProvider provider) {
+    private void loadPropertyAsNode(OntProperty ontProperty,FileRdfProvider provider) throws Exception{
+        if(ontProperty.hasProperty(RDF.type,OWL.DatatypeProperty)){
+            if(isResourceExisted(ontProperty,Words.OWL_DATATYPEPROPERTY)){
+                return;
+            }
+        }else if(isResourceExisted(ontProperty,Words.OWL_OBJECTPROPERTY)){
+            return;
+        }
         String uri = ontProperty.getURI();
         String preLabel = getPreLabel(uri);
         HashSet<String> labels = (HashSet<String>)provider.allLabelsOf(ontProperty);
@@ -156,14 +190,13 @@ public class CypherResourceLoader{
         }
         cypherbd.append("return id(n)");
         String finalCypher = cypherbd.toString();
-        int result = getSession().writeTransaction(new TransactionWork<Integer>() {
+        getSession().writeTransaction(new TransactionWork<Integer>() {
             @Override
             public Integer execute(Transaction transaction) {
                 StatementResult mRst = transaction.run(finalCypher);
                 return mRst.single().get(0).asInt();
             }
         });
-        return result;
     }
 
     /**
