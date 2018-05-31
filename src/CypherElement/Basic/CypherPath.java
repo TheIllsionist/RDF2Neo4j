@@ -13,7 +13,7 @@ public class CypherPath extends CypherStr {
     public CypherPath(CypherNode sNode){
         elements = new LinkedList<>();
         elements.add(sNode);
-        this.hasChanged = true;   //构造实例时第一次拼接
+        this.hasChanged();   //构造实例时第一次拼接
     }
 
     /**
@@ -27,7 +27,8 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:没有关系" + leftRel.getName() + "的尾节点!");
         }
         elements.add(leftRel);
-        this.hasChanged = true;
+        leftRel.setBelongs(this);
+        this.hasChanged();
         return this;
     }
 
@@ -42,7 +43,8 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:没有关系" + rightRel.getName() + "的头节点!");
         }
         elements.add(rightRel);
-        this.hasChanged = true;
+        rightRel.setBelongs(this);
+        this.hasChanged();
         return this;
     }
 
@@ -57,8 +59,13 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:节点" + elements.getLast().getName() + "和节点" + node.getName() + "之间没有关系相连!");
         }
         elements.add(node);
-        this.hasChanged = true;
+        node.setBelongs(this);
+        this.hasChanged();
         return this;
+    }
+
+    void hasChanged(){
+        this.hasChanged = true;
     }
 
     @Override

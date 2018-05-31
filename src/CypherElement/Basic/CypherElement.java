@@ -11,12 +11,21 @@ abstract class CypherElement extends CypherStr {
     protected String name = null;  //Cypher元素的名字
     protected Set<PropValPair> properties = null;  //该Cypher元素所拥有的属性值对集合
 
+
+    protected CypherPath belongs = null;
+    protected void setBelongs(CypherPath path){
+        this.belongs = path;
+    }
+
     public CypherElement(){
     }
 
     public CypherElement(String name,Set<PropValPair> properties){
         this.name = name;
         this.properties = properties;
+        for (PropValPair pair : properties) {
+            pair.setBelongs(this);
+        }
     }
 
     public String getName() {
@@ -25,7 +34,7 @@ abstract class CypherElement extends CypherStr {
 
     public void setName(String name) {
         this.name = name;
-        this.hasChanged = true;
+        hasChanged();
     }
 
     public Set<PropValPair> getProperties() {
@@ -34,7 +43,17 @@ abstract class CypherElement extends CypherStr {
 
     public void setProperties(Set<PropValPair> properties) {
         this.properties = properties;
+        for (PropValPair pair : properties) {
+            pair.setBelongs(this);
+        }
+        hasChanged();
+    }
+
+    void hasChanged(){
         this.hasChanged = true;
+        if(belongs != null){
+            belongs.hasChanged();
+        }
     }
 
     /**

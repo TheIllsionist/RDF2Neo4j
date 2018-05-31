@@ -14,7 +14,7 @@ public class CypherRelationship extends CypherElement{
      * 新建一个关系,没有其他可用信息
      */
     public CypherRelationship(){
-        this.hasChanged = true;
+        this.hasChanged();
     }
     /**
      * 新建一个关系,只声明它的Type,查询深度取默认值,其他为空
@@ -64,7 +64,7 @@ public class CypherRelationship extends CypherElement{
         this.type = type;
         this.minDepth = minDepth;
         this.maxDepth = maxDepth;
-        this.hasChanged = true;   //新建实例,需要进行第一次拼接
+        this.hasChanged();   //新建实例,需要进行第一次拼接
     }
 
     public String getType() {
@@ -73,7 +73,7 @@ public class CypherRelationship extends CypherElement{
 
     public void setType(String type) {
         this.type = type;
-        this.hasChanged = true;
+        this.hasChanged();
     }
 
     public int getMinDepth() {
@@ -82,7 +82,7 @@ public class CypherRelationship extends CypherElement{
 
     public void setMinDepth(int minDepth) {
         this.minDepth = minDepth;
-        this.hasChanged = true;
+        this.hasChanged();
     }
 
     public int getMaxDepth() {
@@ -91,7 +91,7 @@ public class CypherRelationship extends CypherElement{
 
     public void setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
-        this.hasChanged = true;
+        this.hasChanged();
     }
 
     @Override

@@ -10,6 +10,18 @@ public class CypherValue extends CypherStr {
     private DataType dataType = null;  //值的数据类型
     private int valFormat = 0;  //值的格式,0表示单值,1表示List,2表示Map
 
+
+    private PropValPair belongs = null;   //该值所属的属性值对
+    /**
+     * 设置当前CypherValue所属的属性值对
+     * TODO://注!该方法只能此包内调用,其实只能由此对象的所属对象调用
+     */
+    void setBelongs(PropValPair propValPair){
+        this.belongs = propValPair;
+    }
+
+
+
     public CypherValue(String value){
         this(value,DataType.STR);
     }
@@ -31,7 +43,7 @@ public class CypherValue extends CypherStr {
         if(value instanceof Map){
             valFormat = 2;
         }
-        this.hasChanged = true;  //实例被新建时,需要第一次拼接Cypher片段
+        hasChanged();
     }
 
     public Object getValue() {
@@ -40,7 +52,7 @@ public class CypherValue extends CypherStr {
 
     public void setValue(Object value) {
         this.value = value;
-        this.hasChanged = true;
+        hasChanged();
     }
 
     public DataType getDataType() {
@@ -49,11 +61,21 @@ public class CypherValue extends CypherStr {
 
     public void setDataType(DataType dataType) {
         this.dataType = dataType;
-        this.hasChanged = true;
+        hasChanged();
     }
 
     public int getValFormat(){
         return this.valFormat;
+    }
+
+    /**
+     * 当本对象被改变需要重新拼接时,如果本对象存在所属对象,要求所属对象也要重新拼接
+     */
+    private void hasChanged(){
+        this.hasChanged = true;
+        if(this.belongs != null){  //必须要判断所属对象是否为null
+            this.belongs.hasChanged();
+        }
     }
 
     @Override

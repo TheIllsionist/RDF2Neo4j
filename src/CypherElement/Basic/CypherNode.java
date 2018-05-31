@@ -15,7 +15,7 @@ public class CypherNode extends CypherElement{
      * 新建一个CypherNode,什么都没有
      */
     public CypherNode() {
-        this.hasChanged = true;
+        hasChanged();
     }
 
     /**
@@ -44,7 +44,7 @@ public class CypherNode extends CypherElement{
     public CypherNode(String name,String label,Set<PropValPair> properties){
         super(name,properties);
         this.label = label;
-        this.hasChanged = true;  //新建实例时第一次拼接Cypher片段
+        hasChanged();
     }
 
     public String getLabel() {
@@ -53,7 +53,7 @@ public class CypherNode extends CypherElement{
 
     public void setLabel(String label) {
         this.label = label;
-        this.hasChanged = true;
+        hasChanged();
     }
 
     @Override
