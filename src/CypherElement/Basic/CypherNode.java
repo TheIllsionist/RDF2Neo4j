@@ -1,7 +1,6 @@
 package CypherElement.Basic;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
-
 import java.util.Set;
 
 /**
@@ -15,6 +14,7 @@ public class CypherNode extends CypherElement{
      * 新建一个CypherNode,什么都没有
      */
     public CypherNode() {
+        super();
         hasChanged();
     }
 

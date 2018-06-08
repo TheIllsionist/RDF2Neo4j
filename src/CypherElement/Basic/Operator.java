@@ -1,5 +1,8 @@
 package CypherElement.Basic;
 
+/**
+ * Cypher中的操作符
+ */
 public enum  Operator{
     EQ_TO,  //等于
     UNEQ_TO,  //不等于

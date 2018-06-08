@@ -17,7 +17,7 @@ public class CypherPath extends CypherStr {
     }
 
     /**
-     * 通过..关系被..相连,当前CypherPath结尾的节点作为该关系的尾节点
+     * 通过..关系被..相连,要求输入一个左连接关系作为参数,当前CypherPath结尾的节点作为该关系的尾节点
      * @param leftRel
      * @return
      * @throws Exception
@@ -27,7 +27,7 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:没有关系" + leftRel.getName() + "的尾节点!");
         }
         elements.add(leftRel);
-        leftRel.setBelongs(this);
+//        leftRel.setBelongs(this);
         this.hasChanged();
         return this;
     }
@@ -43,7 +43,7 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:没有关系" + rightRel.getName() + "的头节点!");
         }
         elements.add(rightRel);
-        rightRel.setBelongs(this);
+//        rightRel.setBelongs(this);
         this.hasChanged();
         return this;
     }
@@ -59,7 +59,7 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:节点" + elements.getLast().getName() + "和节点" + node.getName() + "之间没有关系相连!");
         }
         elements.add(node);
-        node.setBelongs(this);
+//        node.setBelongs(this);
         this.hasChanged();
         return this;
     }

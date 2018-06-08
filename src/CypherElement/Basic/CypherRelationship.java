@@ -14,6 +14,7 @@ public class CypherRelationship extends CypherElement{
      * 新建一个关系,没有其他可用信息
      */
     public CypherRelationship(){
+        super();
         this.hasChanged();
     }
     /**
@@ -34,7 +35,7 @@ public class CypherRelationship extends CypherElement{
     }
     /**
      * 新建一个关系,声明Type,最小深度
-     * 意味着不限最大深度,其他信息为空
+     * 意味着不限最大深度,会默认将最大深度设置为Integer.MAX_VALUE,其他信息为空
      * @param type
      * @param minDepth
      */

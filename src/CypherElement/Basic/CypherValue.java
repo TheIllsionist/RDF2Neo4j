@@ -4,22 +4,24 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Cypher取值对象,Neo4j的Cypher支持多种数据结构,在当前对象中提供了对基本数据类型,List和Map的支持
+ */
 public class CypherValue extends CypherStr {
 
     private Object value = null;  //具体的值
-    private DataType dataType = null;  //值的数据类型
+    private DataType dataType = null;  //值的数据类型,如果值是List或Map,则代表List中每个元素或者Map中每个键值对的值的类型
     private int valFormat = 0;  //值的格式,0表示单值,1表示List,2表示Map
 
 
-    private PropValPair belongs = null;   //该值所属的属性值对
-    /**
-     * 设置当前CypherValue所属的属性值对
-     * TODO://注!该方法只能此包内调用,其实只能由此对象的所属对象调用
-     */
-    void setBelongs(PropValPair propValPair){
-        this.belongs = propValPair;
-    }
-
+//    private PropValPair belongs = null;   //该值所属的属性值对
+//    /**
+//     * 设置当前CypherValue所属的属性值对
+//     * TODO://注!该方法只能此包内调用,其实只能由此对象的所属对象调用
+//     */
+//    void setBelongs(PropValPair propValPair){
+//        this.belongs = propValPair;
+//    }
 
 
     public CypherValue(String value){
@@ -69,13 +71,13 @@ public class CypherValue extends CypherStr {
     }
 
     /**
-     * 当本对象被改变需要重新拼接时,如果本对象存在所属对象,要求所属对象也要重新拼接
+     * 当Cypher值对象新建或者其setter方法被调用时,此方法被调用标志本对象需要重新进行拼接
      */
     private void hasChanged(){
         this.hasChanged = true;
-        if(this.belongs != null){  //必须要判断所属对象是否为null
-            this.belongs.hasChanged();
-        }
+//        if(this.belongs != null){  //必须要判断所属对象是否为null
+//            this.belongs.hasChanged();
+//        }
     }
 
     @Override
@@ -123,7 +125,7 @@ public class CypherValue extends CypherStr {
     }
 
     /**
-     * 一个具体的Literal是没有引用名称的
+     * Literal没有引用名称
      * @return
      */
     @Override

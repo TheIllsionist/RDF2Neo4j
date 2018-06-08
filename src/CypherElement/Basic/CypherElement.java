@@ -1,31 +1,34 @@
 package CypherElement.Basic;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
+
+import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Cypher基本元素,对应Neo4j的基本元素Node和Relationship,认为Cypher语句的基本元素为CypherNode和CypherRelationship
+ *
  */
 abstract class CypherElement extends CypherStr {
 
     protected String name = null;  //Cypher元素的名字
     protected Set<PropValPair> properties = null;  //该Cypher元素所拥有的属性值对集合
 
-
-    protected CypherPath belongs = null;
-    protected void setBelongs(CypherPath path){
-        this.belongs = path;
-    }
+//    protected CypherPath belongs = null;
+//    protected void setBelongs(CypherPath path){
+//        this.belongs = path;
+//    }
 
     public CypherElement(){
+        properties = new HashSet<>();
     }
 
     public CypherElement(String name,Set<PropValPair> properties){
         this.name = name;
         this.properties = properties;
-        for (PropValPair pair : properties) {
-            pair.setBelongs(this);
-        }
+//        for (PropValPair pair : properties) {
+//            pair.setBelongs(this);
+//        }
     }
 
     public String getName() {
@@ -43,17 +46,38 @@ abstract class CypherElement extends CypherStr {
 
     public void setProperties(Set<PropValPair> properties) {
         this.properties = properties;
-        for (PropValPair pair : properties) {
-            pair.setBelongs(this);
-        }
+//        for (PropValPair pair : properties) {
+//            pair.setBelongs(this);
+//        }
         hasChanged();
     }
 
-    void hasChanged(){
+    protected void hasChanged(){
         this.hasChanged = true;
-        if(belongs != null){
-            belongs.hasChanged();
+//        if(belongs != null){
+//            belongs.hasChanged();
+//        }
+    }
+
+    /**
+     * 给当前Cypher基本元素添加一个属性值对
+     * @param pair
+     */
+    protected void addPair(PropValPair pair){
+        int lastSize = properties.size();
+        this.properties.add(pair);
+        if(properties.size() > lastSize){  //如果真的添加了(因为Set的不重复性),才标志修改
+            hasChanged();
         }
+    }
+
+    /**
+     * 将某个属性值对从该Cypher基本元素中移除
+     * @param pair
+     */
+    protected void removePair(PropValPair pair){
+        this.properties.remove(pair);
+        hasChanged();
     }
 
     /**
