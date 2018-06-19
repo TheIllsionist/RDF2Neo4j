@@ -9,52 +9,53 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 public class CypherProperty implements ToCypher{
 
     private String proName = null;  //该Property的名字
+    private CypherElement belongs = null;  //该Property所属于的Cypher元素(Node或Relationship)
 
     public CypherProperty(String name){
+        this(name,null);
+    }
+
+    public CypherProperty(String name,CypherElement element){
         this.proName = name;
+        this.belongs = element;
     }
 
     public String getProName() {
         return proName;
     }
 
-    public void setProName(String proName) {
-        this.proName = proName;
+    public CypherElement getBelongs(){
+        return this.belongs;
     }
 
+    public void setBelongs(CypherElement element){
+        this.belongs = element;
+    }
+
+    /**
+     * 返回该属性的属性名
+     * @return
+     */
     public String toString(){
         return proName;
     }
 
     /**
-     * 获取该属性的属性名
+     * 将该属性转为Cypher语句片断
+     * 如果该属性有所属Cypher元素,则返回"元素名.属性名",否则直接返回属性名
      * @return
      */
     @Override
     public String toCypherStr() {
-        return toString();
-    }
-
-    public String toWhereStr(){
-        return toWhereStr(null);
+        return belongs == null ? proName : belongs.getName() + "." + proName;
     }
 
     /**
-     * 有时在Cypher查询的Where子句中会指定某个Node或者Relationship的某个属性必须满足的条件
-     * 此时就不能仅仅返回该属性的属性名,还要带上在Where条件中指定的该属性所属的Cypher元素
-     * //TODO:此处的设计可能不是很合理,可能需要在后面使用过程中进行修改
-     * @param element
+     * 返回该属性在Cypher语句中的引用名,即该属性的属性名
      * @return
      */
-    public String toWhereStr(CypherElement element){
-        if(element == null || element.referencedName().matches("\\s*")){
-            return this.toCypherStr();
-        }
-        return element.referencedName() + "." + toCypherStr();
-    }
-
     @Override
-    public String referencedName() {
+    public String referenceName() {
         return proName;
     }
 
@@ -66,7 +67,13 @@ public class CypherProperty implements ToCypher{
             return false;
         }
         CypherProperty property = (CypherProperty)obj;
-        return new EqualsBuilder().append(proName,property.proName).isEquals();
+        if(belongs == null && property.belongs == null){  //两个所属属性都无引用,则只比较属性名是否相同
+            return proName.equals(property.proName);
+        }
+        if(belongs != null && property.belongs != null){  //两个所属都有引用,则都比较
+            return new EqualsBuilder().append(proName,property.proName).append(belongs,property.belongs).isEquals();
+        }
+        return false;  //一个有所属,一个没有所属,肯定不相等
     }
 
 }

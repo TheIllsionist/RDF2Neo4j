@@ -13,8 +13,9 @@ public class CypherPath extends CypherStr {
     public CypherPath(CypherNode sNode){
         elements = new LinkedList<>();
         elements.add(sNode);
-        this.hasChanged();   //构造实例时第一次拼接
+        cypherFragment = sNode.toCypherStr();
     }
+
 
     /**
      * 通过..关系被..相连,要求输入一个左连接关系作为参数,当前CypherPath结尾的节点作为该关系的尾节点
@@ -27,8 +28,7 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:没有关系" + leftRel.getName() + "的尾节点!");
         }
         elements.add(leftRel);
-//        leftRel.setBelongs(this);
-        this.hasChanged();
+        cypherFragment += leftRel.toCypherStr();
         return this;
     }
 
@@ -43,8 +43,7 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:没有关系" + rightRel.getName() + "的头节点!");
         }
         elements.add(rightRel);
-//        rightRel.setBelongs(this);
-        this.hasChanged();
+        cypherFragment += rightRel.toCypherStr();
         return this;
     }
 
@@ -59,26 +58,17 @@ public class CypherPath extends CypherStr {
             throw new Exception("不合法的CypherPath:节点" + elements.getLast().getName() + "和节点" + node.getName() + "之间没有关系相连!");
         }
         elements.add(node);
-//        node.setBelongs(this);
-        this.hasChanged();
+        cypherFragment += node.toCypherStr();
         return this;
     }
 
-    void hasChanged(){
-        this.hasChanged = true;
+    @Override
+    protected String appendCypher() {
+        return null;
     }
 
     @Override
     public String toCypherStr() {
-        if(!hasChanged){
-            return cypherFragment;
-        }
-        StringBuilder builder = new StringBuilder();
-        for (CypherElement element:elements) {
-            builder.append(element.toCypherStr());
-        }
-        cypherFragment = builder.toString();
-        hasChanged = false;
         return cypherFragment;
     }
 
@@ -87,7 +77,7 @@ public class CypherPath extends CypherStr {
      * @return
      */
     @Override
-    public String referencedName() {
+    public String referenceName() {
         return "";
     }
 

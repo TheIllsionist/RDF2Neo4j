@@ -15,6 +15,6 @@ public interface ToCypher {
      * 返回对象在Cypher语句中被引用时的引用名
      * @return
      */
-    String referencedName();
+    String referenceName();
 
 }

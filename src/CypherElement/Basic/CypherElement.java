@@ -1,23 +1,18 @@
 package CypherElement.Basic;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Cypher基本元素,对应Neo4j的基本元素Node和Relationship,认为Cypher语句的基本元素为CypherNode和CypherRelationship
- *
+ * Cypher基本元素
+ * 对应Neo4j的基本元素Node和Relationship,认为Cypher语句的基本元素为CypherNode和CypherRelationship
  */
-abstract class CypherElement extends CypherStr {
+public abstract class CypherElement extends CypherStr {
 
     protected String name = null;  //Cypher元素的名字
     protected Set<PropValPair> properties = null;  //该Cypher元素所拥有的属性值对集合
-
-//    protected CypherPath belongs = null;
-//    protected void setBelongs(CypherPath path){
-//        this.belongs = path;
-//    }
+    protected String propsFragment = null;   //缓存属性值对集的拼接结果
 
     public CypherElement(){
         properties = new HashSet<>();
@@ -26,9 +21,6 @@ abstract class CypherElement extends CypherStr {
     public CypherElement(String name,Set<PropValPair> properties){
         this.name = name;
         this.properties = properties;
-//        for (PropValPair pair : properties) {
-//            pair.setBelongs(this);
-//        }
     }
 
     public String getName() {
@@ -37,7 +29,7 @@ abstract class CypherElement extends CypherStr {
 
     public void setName(String name) {
         this.name = name;
-        hasChanged();
+        this.cypherFragment = appendCypher();  //只有元素名称改变,不需要重新拼接属性值对
     }
 
     public Set<PropValPair> getProperties() {
@@ -46,28 +38,20 @@ abstract class CypherElement extends CypherStr {
 
     public void setProperties(Set<PropValPair> properties) {
         this.properties = properties;
-//        for (PropValPair pair : properties) {
-//            pair.setBelongs(this);
-//        }
-        hasChanged();
-    }
-
-    protected void hasChanged(){
-        this.hasChanged = true;
-//        if(belongs != null){
-//            belongs.hasChanged();
-//        }
+        this.propsFragment = propsToStr();
+        this.cypherFragment = appendCypher();
     }
 
     /**
      * 给当前Cypher基本元素添加一个属性值对
      * @param pair
      */
-    protected void addPair(PropValPair pair){
+    protected void addCondition(PropValPair pair){
         int lastSize = properties.size();
         this.properties.add(pair);
-        if(properties.size() > lastSize){  //如果真的添加了(因为Set的不重复性),才标志修改
-            hasChanged();
+        if(properties.size() > lastSize){  //属性值对真的有变化时再重新拼接
+            this.propsFragment = propsToStr();
+            this.cypherFragment = appendCypher();
         }
     }
 
@@ -75,9 +59,13 @@ abstract class CypherElement extends CypherStr {
      * 将某个属性值对从该Cypher基本元素中移除
      * @param pair
      */
-    protected void removePair(PropValPair pair){
+    protected void removeCondition(PropValPair pair){
+        int lastSize = properties.size();
         this.properties.remove(pair);
-        hasChanged();
+        if(properties.size() < lastSize){  //属性值对真的有变化时再重新拼接
+            this.propsFragment = propsToStr();
+            this.cypherFragment = appendCypher();
+        }
     }
 
     /**
@@ -99,7 +87,7 @@ abstract class CypherElement extends CypherStr {
     }
 
     @Override
-    public String referencedName(){
+    public String referenceName(){
         return name;
     }
 

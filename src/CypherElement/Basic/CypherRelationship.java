@@ -1,7 +1,6 @@
 package CypherElement.Basic;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
-
 import java.util.Set;
 
 public class CypherRelationship extends CypherElement{
@@ -15,7 +14,7 @@ public class CypherRelationship extends CypherElement{
      */
     public CypherRelationship(){
         super();
-        this.hasChanged();
+        this.cypherFragment = appendCypher();
     }
     /**
      * 新建一个关系,只声明它的Type,查询深度取默认值,其他为空
@@ -65,7 +64,8 @@ public class CypherRelationship extends CypherElement{
         this.type = type;
         this.minDepth = minDepth;
         this.maxDepth = maxDepth;
-        this.hasChanged();   //新建实例,需要进行第一次拼接
+        this.propsFragment = propsToStr();
+        this.cypherFragment = appendCypher();
     }
 
     public String getType() {
@@ -74,7 +74,7 @@ public class CypherRelationship extends CypherElement{
 
     public void setType(String type) {
         this.type = type;
-        this.hasChanged();
+        this.cypherFragment = appendCypher();
     }
 
     public int getMinDepth() {
@@ -83,7 +83,7 @@ public class CypherRelationship extends CypherElement{
 
     public void setMinDepth(int minDepth) {
         this.minDepth = minDepth;
-        this.hasChanged();
+        this.cypherFragment = appendCypher();
     }
 
     public int getMaxDepth() {
@@ -92,39 +92,32 @@ public class CypherRelationship extends CypherElement{
 
     public void setMaxDepth(int maxDepth) {
         this.maxDepth = maxDepth;
-        this.hasChanged();
+        this.cypherFragment = appendCypher();
     }
 
     @Override
-    public String toCypherStr() {
-        if(!hasChanged){
-            return cypherFragment;
-        }
+    protected String appendCypher() {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
         //指定关系的引用名
         if(name != null && !name.matches("\\s*")){
             builder.append(name);
         }
-        //指定关系的Type
         if(type != null && !type.matches("\\s*")){
             builder.append(":").append(type);
         }
-        //指定关系的层数
         builder.append("*");
         if(minDepth != maxDepth){
             builder.append(minDepth).append("..");  //设置最小层数
             if(maxDepth != Integer.MAX_VALUE){ //当最大层数为Integer.MAX_VALUE时,表明没有层数限制
                 builder.append(maxDepth);
             }
-        }else{
+        }else {
             builder.append(minDepth);
         }
-        builder.append(" " + propsToStr());
+        builder.append(" " + propsFragment);
         builder.append("]");
-        cypherFragment = builder.toString();
-        hasChanged = false;
-        return cypherFragment;
+        return builder.toString();
     }
 
     public boolean equals(Object obj){

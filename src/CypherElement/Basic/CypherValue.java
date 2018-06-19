@@ -5,24 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Cypher取值对象,Neo4j的Cypher支持多种数据结构,在当前对象中提供了对基本数据类型,List和Map的支持
+ * Cypher取值对象,本质上是一个Literal
+ * Neo4j的Cypher支持多种数据结构,在当前对象中提供了对基本数据类型,List和Map的支持(目前Neo4j社区版不支持Map数据类型)
  */
-public class CypherValue extends CypherStr {
+public class CypherValue implements ToCypher {
 
-    private Object value = null;  //具体的值
+    private Object value = null;  //值对象
     private DataType dataType = null;  //值的数据类型,如果值是List或Map,则代表List中每个元素或者Map中每个键值对的值的类型
     private int valFormat = 0;  //值的格式,0表示单值,1表示List,2表示Map
-
-
-//    private PropValPair belongs = null;   //该值所属的属性值对
-//    /**
-//     * 设置当前CypherValue所属的属性值对
-//     * TODO://注!该方法只能此包内调用,其实只能由此对象的所属对象调用
-//     */
-//    void setBelongs(PropValPair propValPair){
-//        this.belongs = propValPair;
-//    }
-
 
     public CypherValue(String value){
         this(value,DataType.STR);
@@ -45,40 +35,21 @@ public class CypherValue extends CypherStr {
         if(value instanceof Map){
             valFormat = 2;
         }
-        hasChanged();
     }
 
     public Object getValue() {
         return value;
     }
 
-    public void setValue(Object value) {
-        this.value = value;
-        hasChanged();
-    }
-
     public DataType getDataType() {
         return dataType;
     }
 
-    public void setDataType(DataType dataType) {
-        this.dataType = dataType;
-        hasChanged();
-    }
 
     public int getValFormat(){
         return this.valFormat;
     }
 
-    /**
-     * 当Cypher值对象新建或者其setter方法被调用时,此方法被调用标志本对象需要重新进行拼接
-     */
-    private void hasChanged(){
-        this.hasChanged = true;
-//        if(this.belongs != null){  //必须要判断所属对象是否为null
-//            this.belongs.hasChanged();
-//        }
-    }
 
     @Override
     public String toCypherStr(){
@@ -86,10 +57,6 @@ public class CypherValue extends CypherStr {
     }
 
     public String toString() {
-        if(!hasChanged){    //关键元素没有被改变过,不需重新拼接,直接返回原来拼接好的Cypher片段
-            return cypherFragment;
-        }
-        //关键元素被改变,重新拼接然后再返回
         StringBuilder builder = new StringBuilder();
         switch (valFormat){
             case 0:{  //单个属性值
@@ -119,17 +86,15 @@ public class CypherValue extends CypherStr {
                 builder.append("]");
             }
         }
-        cypherFragment = builder.toString();
-        hasChanged = false;
-        return cypherFragment;
+        return builder.toString();
     }
 
     /**
-     * Literal没有引用名称
+     * Literal没有引用名称,所以返回空串
      * @return
      */
     @Override
-    public String referencedName() {
+    public String referenceName() {
         return "";
     }
 

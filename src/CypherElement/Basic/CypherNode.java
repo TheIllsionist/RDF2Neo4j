@@ -15,7 +15,7 @@ public class CypherNode extends CypherElement{
      */
     public CypherNode() {
         super();
-        hasChanged();
+        this.cypherFragment = appendCypher();
     }
 
     /**
@@ -44,7 +44,8 @@ public class CypherNode extends CypherElement{
     public CypherNode(String name,String label,Set<PropValPair> properties){
         super(name,properties);
         this.label = label;
-        hasChanged();
+        this.propsFragment = propsToStr();
+        this.cypherFragment = appendCypher();
     }
 
     public String getLabel() {
@@ -53,27 +54,22 @@ public class CypherNode extends CypherElement{
 
     public void setLabel(String label) {
         this.label = label;
-        hasChanged();
+        this.cypherFragment = appendCypher(); //只修改Label,不需要重新拼接属性值对
     }
 
     @Override
-    public String toCypherStr() {
-        if(!hasChanged){     //关键元素没有改变,不需要重新拼接,直接返回原有结果
-            return cypherFragment;
-        }
+    protected String appendCypher() {
         StringBuilder builder = new StringBuilder();
         builder.append("(");
         if(name != null && !name.matches("\\s*")){
             builder.append(name);
         }
-        if(label != null && !label.matches("\\s*")){
+        if(label != null && label.matches("\\s*")){
             builder.append(":").append(label);
         }
-        builder.append(" " + propsToStr());
+        builder.append("" + propsFragment);
         builder.append(")");
-        cypherFragment = builder.toString();
-        hasChanged = false;
-        return cypherFragment;
+        return builder.toString();
     }
 
     public boolean equals(Object obj){
