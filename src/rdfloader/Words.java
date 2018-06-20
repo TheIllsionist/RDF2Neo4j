@@ -1,0 +1,11 @@
+package rdfloader;
+
+public enum Words {
+
+    OWL_CLASS,
+    OWL_DATATYPEPROPERTY,
+    OWL_OBJECTPROPERTY,
+    OWL_NAMEDINDIVIDUAL,
+    OWL_TOPDATAPROPERTY,
+    OWL_TOPOBJECTPROPERTY
+}
