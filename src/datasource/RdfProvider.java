@@ -2,8 +2,10 @@ package datasource;
 
 import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.Literal;
+import util.CLASS_REL;
+import util.INSTANCE_REL;
+import util.PROPERTY_REL;
 import util.Pair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -71,25 +73,56 @@ public interface RdfProvider {
     Map<DatatypeProperty,List<Literal>> allDpValuesOf(Individual individual);
 
     /**
-     * 得到某个特定OWL实例所拥有的所有对象属性及其对应的属性值
-     * 由于关于实例与实例之间关系的知识表示规范特点,当前接口的返回值较为复杂
+     * 得到某个特定OWL实例所拥有的所有对象属性及其对应的属性值(对象属性的属性值为实例)
      * @param individual &nbsp 某指定实例
      * @return
      */
-    Map<ObjectProperty,Individual> allOpValuesOf(Individual individual);
+    Map<ObjectProperty,List<Individual>> allOpValuesOf(Individual individual);
+
+    /**
+     * 根据指定的类间关系类型,从此RDF提供者中提取所有该关系的主宾对
+     * @param rel &nbsp 指定的类间关系类型
+     * @return
+     */
+    Queue<Pair<OntClass,OntClass>> relsBetweenClasses(CLASS_REL rel);
+
+    /**
+     * 根据指定的属性间关系类型,从此RDF提供者中提取所有该关系的主宾对
+     * @param rel &nbsp 指定的属性间关系类型
+     * @return
+     */
+    Queue<Pair<OntProperty,OntProperty>> relsBetweenProperties(PROPERTY_REL rel);
+
+    /**
+     * 根据指定的实例间关系类型,从此RDF提供者中提取所有该关系的主宾对
+     * @param rel &nbsp 指定的实例间关系类型
+     * @return
+     */
+    Queue<Pair<Individual,Individual>> relsBetweenIndividuals(INSTANCE_REL rel);
 
     /**
      * 得到该RDFModel中所有的有父子关系的类对,子类在前,父类在后
      * @return
      */
-    Queue<Pair<OntClass,OntClass>> allSubClassOfRel();
+    Queue<Pair<OntClass,OntClass>> allSubClassOfRels();
 
     /**
      * 得到该RDFModel中所有的有父子关系的属性对,子属性在前,父属性在后
      * @return
      */
-    Queue<Pair<OntProperty,OntProperty>> allSubPropertyOfRel();
+    Queue<Pair<OntProperty,OntProperty>> allSubPropertyOfRels();
 
+    /**
+     * 得到该RDFModel中所有的rdfs:range关系,返回拥有该关系的主宾对
+     * @return
+     */
+    Queue<Pair<OntProperty,OntClass>> allRdfsRangeRels();
+
+    /**
+     * 得到该RDFModel中所有的rdfs:domain关系,返回拥有该关系的主宾对
+     * @return
+     */
+    Queue<Pair<OntProperty,OntClass>> allRdfsDomainRels();
 
 
 }

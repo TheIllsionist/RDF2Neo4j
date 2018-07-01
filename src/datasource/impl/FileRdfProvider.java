@@ -8,71 +8,46 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import util.CLASS_REL;
+import util.INSTANCE_REL;
+import util.PROPERTY_REL;
+import util.Pair;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.InputStream;
 import java.util.*;
 
+
 public class FileRdfProvider implements RdfProvider {
 
-    private String prefix = "meta";  //TODO:后面修改为从配置文件中读取
-    private String nameSpace = "http://kse.seu.edu.cn/meta#";  //TODO:后面修改为从配置文件中读取
-    private OntModel ontModel = null;
-    private String sourcePath = null;  //文件夹路径
+    private final OntModel ontModel;    //导入/存储程序不应修改知识源
 
     /**
      * 构造函数,根据指定的文件夹路径读取该文件夹下的所有owl文件的内容,如果该文件夹下没有owl文件,则返回一个空模型
      * @param sourcePath &nbsp 指定的文件夹路径
      */
     public FileRdfProvider(String sourcePath){
-        this.sourcePath = sourcePath;
         File folder = new File(sourcePath);
-        File[] files = folder.listFiles();
+        File[] files = folder.listFiles(new FileFilter() {  //将当前文件夹下的所有.owl文件列出(不支持多重文件夹,因为没有必要)
+            @Override
+            public boolean accept(File pathname) {
+                if(pathname.getName().endsWith(".owl")) { return true; }
+                return false;
+            }
+        });
         ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM); //创建Model,OWL Full,In Memory,No Reasoner
         if(files.length == 0){
             return;
         }
         for (File file : files) {  //将文件夹下的所有本体文件的内容读入
-           InputStream in = FileManager.get().open(file.getAbsolutePath());
-           this.ontModel.read(in,null);
+            InputStream in = FileManager.get().open(file.getAbsolutePath());
+            this.ontModel.read(in,null);  //TODO:还未测试过这种读入方式的有效性
         }
-
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public String getNameSpace() {
-        return nameSpace;
-    }
-
-    public void setNameSpace(String nameSpace) {
-        this.nameSpace = nameSpace;
-    }
-
-    public String getSourcePath(){
-        return this.sourcePath;
-    }
-
-    public void setSourcePath(String sourcePath){
-        this.sourcePath = sourcePath;
-    }
-
-    public OntModel getOntModel(){
-        return this.ontModel;
-    }
-
-    public void setOntModel(OntModel ontModel){
-        this.ontModel = ontModel;
     }
 
     /**
-     * 返回该RDF提供者拥有的所有本体类
-     * @return
+     * 返回该RDF提供者拥有的所有类
+     * @return &nbsp 类别集合
      */
     @Override
     public Set<OntClass> allOntClasses() {
@@ -85,23 +60,22 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
-     * 返回该RDF提供者拥有的所有本体属性
-     * @return
+     * 返回该RDF提供者拥有的所有属性(包括DP,OP,AP,FP,TP等等)
+     * @return &nbsp 属性集合
      */
     @Override
     public Set<OntProperty> allOntProperties(){
         HashSet<OntProperty> ontProperties = new HashSet<>();
-        ExtendedIterator<OntProperty> ontPropertyIter = ontModel.listAllOntProperties();//列所有属性,包括DP,OP,AP等
+        ExtendedIterator<OntProperty> ontPropertyIter = ontModel.listAllOntProperties();
         while(ontPropertyIter.hasNext()){
-            OntProperty tmpPro = ontPropertyIter.next();
-            ontProperties.add(tmpPro);
+            ontProperties.add(ontPropertyIter.next());
         }
         return ontProperties;
     }
 
     /**
      * 返回该RDF提供者拥有的所有数据类型属性
-     * @return
+     * @return &nbsp 所有的数据类型属性的集合
      */
     @Override
     public Set<DatatypeProperty> allDatatypeProperties() {
@@ -115,7 +89,7 @@ public class FileRdfProvider implements RdfProvider {
 
     /**
      * 返回该RDF提供者拥有的所有对象属性
-     * @return
+     * @return &nbsp 所有的对象属性的集合
      */
     @Override
     public Set<ObjectProperty> allObjectProperties() {
@@ -129,7 +103,7 @@ public class FileRdfProvider implements RdfProvider {
 
     /**
      * 返回该RDF提供者拥有的所有实例
-     * @return
+     * @return &nbsp 所有的实例的集合
      */
     @Override
     public Set<Individual> allIndividuals() {
@@ -144,12 +118,12 @@ public class FileRdfProvider implements RdfProvider {
     /**
      * 返回此RDF提供者中直接属于某指定类别的实例的集合
      * @param ontClass &nbsp 指定类别
-     * @return
+     * @return &nbsp 属于指定类别ontClass的实例集合
      */
     @Override
     public Set<Individual> allIndividualsOfClass(OntClass ontClass) {
         Set<Individual> individuals = new HashSet<>();
-        ExtendedIterator<? extends OntResource> insIter = ontClass.listInstances(true);
+        ExtendedIterator<? extends OntResource> insIter = ontClass.listInstances(true);  //这里列出了直接属于该类的实例
         while (insIter.hasNext()){
             individuals.add((Individual)insIter.next());
         }
@@ -158,8 +132,8 @@ public class FileRdfProvider implements RdfProvider {
 
     /**
      * 返回某个指定本体资源所拥有的所有Label(rdfs:label属性值)
-     * @param ontResource
-     * @return
+     * @param ontResource 指定的资源
+     * @return &nbsp 指定资源ontResource所拥有的所有的Label集合
      */
     @Override
     public Set<String> allLabelsOf(OntResource ontResource) {
@@ -173,8 +147,8 @@ public class FileRdfProvider implements RdfProvider {
 
     /**
      * 返回某个指定本体资源所拥有的所有Comments(rdfs:comment属性值)
-     * @param ontResource
-     * @return
+     * @param ontResource 指定的资源
+     * @return &nbsp 指定资源ontResource所拥有的所有Label集合
      */
     @Override
     public Set<String> allCommentsOf(OntResource ontResource) {
@@ -189,7 +163,7 @@ public class FileRdfProvider implements RdfProvider {
     /**
      * 返回某个指定实例所拥有的所有数据类型属性及其对应的取值
      * @param individual &nbsp 某指定实例
-     * @return
+     * @return &nbsp 指定实例individual所拥有的DP以及它这些DP的取值的字典
      */
     @Override
     public Map<DatatypeProperty, List<Literal>> allDpValuesOf(Individual individual) {
@@ -203,6 +177,7 @@ public class FileRdfProvider implements RdfProvider {
                 if (!dpValsOfIns.containsKey(dp)) {
                     dpValsOfIns.put(dp, new LinkedList<>());
                 }
+                //数据类型属性的取值可以是链表,且在同一个DP上可能有多个取值
                 StmtIterator valIter = individual.listProperties(dp);
                 while (valIter.hasNext()) {
                     dpValsOfIns.get(dp).add(valIter.nextStatement().getLiteral());
@@ -213,21 +188,28 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
-     * 返回某个指定实例所拥有的所有对象属性,该对象属性的实例取值,以及这两个实例之间关系的属性(参考中介节点规范)
+     * 返回某个指定实例所拥有的所有对象属性,该对象属性的实例取值
+     * 如果该指定实例非blankNode实例,则它的对象属性可能有多个,每个对象属性可能有多个取值（比如航母配置了舰载机,火箭等等）
+     * 如果该指定实例是blankNode实例,则它只有一个对象属性(meta:实例),且该对象属性只有一个值
      * @param individual &nbsp 某指定实例
-     * @return
+     * @return 该指定实例individual的所有对象属性及它这些对象属性对应的取值
      */
     @Override
-    public Map<ObjectProperty, Individual> allOpValuesOf(Individual individual) {
-        Map<ObjectProperty,Individual> opValsOfIns = new HashMap<>();
+    public Map<ObjectProperty, List<Individual>> allOpValuesOf(Individual individual) {
+        Map<ObjectProperty,List<Individual>> opValsOfIns = new HashMap<>();
         StmtIterator iterator = individual.listProperties();
         while(iterator.hasNext()){
             Statement propStmt = iterator.nextStatement();
             Property property = propStmt.getPredicate();
             if(property.hasProperty(RDF.type,OWL.ObjectProperty)){
                 ObjectProperty op = ontModel.getObjectProperty(property.getURI());
-                if(!opValsOfIns.containsKey(op)){  //不会出现同一个OP下对应多个实例的情况,所以只需加入一次即可
-                    opValsOfIns.put(op,ontModel.getIndividual(propStmt.getObject().asResource().getURI()));
+                if(!opValsOfIns.containsKey(op)){
+                    opValsOfIns.put(op,new LinkedList<>());
+                }
+                StmtIterator insIter = individual.listProperties(op);
+                //有可能出现同一个对象属性的取值有多个,比如说一个航母配置了舰载机,火箭等等
+                while(insIter.hasNext()){
+                    opValsOfIns.get(op).add(ontModel.getIndividual(insIter.next().getObject().asResource().getURI()));
                 }
             }
         }
@@ -235,51 +217,143 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
-     * 列出某个类全部的直接父类
-     * @param ontClass
+     * 根据某个指定的类别间关系从当前RDFModel中取出具有该关系的主宾对
+     * @param rel &nbsp 指定的类间关系类型
      * @return
      */
-    public Set<OntClass> allSupClassesOf(OntClass ontClass){
-        HashSet<OntClass> supOntClasses = new HashSet<>();
-        ExtendedIterator<OntClass> supOntClassIter = ontClass.listSuperClasses(true);  //列出当前类的直接父类
-        while(supOntClassIter.hasNext()){
-            supOntClasses.add(supOntClassIter.next());
+    @Override
+    public Queue<Pair<OntClass, OntClass>> relsBetweenClasses(CLASS_REL rel) {
+        Queue<Pair<OntClass,OntClass>> subObjPair = new LinkedList<>();
+        Selector selector = null;
+        switch (rel){
+            case SUBCLASS_OF:selector = new SimpleSelector(null,RDFS.subClassOf,(OntClass)null);break; //是父子关系时,子类在前,父类在后
+            case DISJOINT_WITH:selector = new SimpleSelector(null,OWL.disjointWith,(OntClass)null);break;
+            case EQUIVALENT_TO:selector = new SimpleSelector(null,OWL.equivalentClass,(OntClass)null);break;
         }
-        return supOntClasses;
-    }
-
-    /**
-     * 列出某个属性全部的直接父属性
-     * TODO: 这里注意了,某个属性的父属性可能已经不是 owl:DatatypeProperty或者OWL:ObjectProperty,所以这里使用了Set<Property>作为返回结果
-     * 父属性可能包含 owl:topDataProperty 和 owl:topObjectProperty
-     * @param ontProperty
-     * @return
-     */
-    public Set<Property> allSupPropertiesOf(OntProperty ontProperty){
-        HashSet<Property> supProperties = new HashSet<>();
-        StmtIterator supPropStmtIter = ontProperty.listProperties(RDFS.subPropertyOf); //列当前属性subPropertyOf的值,即它的所有父属性
-        while(supPropStmtIter.hasNext()){
-            Resource tmpResource = supPropStmtIter.nextStatement().getObject().asResource();
-            supProperties.add(ontModel.getProperty(tmpResource.getURI()));
-        }
-        return supProperties;
-    }
-
-    /**
-     * 列出某个实例直接所属的类的集合
-     * @param individual
-     * @return
-     */
-    public Set<OntClass> allOntClassesOf(Individual individual){
-        HashSet<OntClass> ontClasses = new HashSet<>();
-        StmtIterator rdfTypeIter = individual.listProperties(RDF.type);  //列出该实例所有谓词是rdf:type的语句
-        while(rdfTypeIter.hasNext()){
-            Resource tmpRes = rdfTypeIter.nextStatement().getObject().asResource();  //取第三元的资源
-            if(tmpRes.hasProperty(RDF.type,OWL.Class)){  //如果第三元是类,说明当前第三元是individual的所属类
-                ontClasses.add(ontModel.getOntClass(tmpRes.getURI()));
+        StmtIterator iterator = ontModel.listStatements(selector);
+        while (iterator.hasNext()){
+            Statement statement = iterator.nextStatement();
+            OntClass fClass = ontModel.getOntClass(statement.getSubject().getURI());  //是父子关系时,fClass是子类
+            OntClass sClass = ontModel.getOntClass(statement.getObject().asResource().getURI());  //是父子关系时,sClass是父类
+            if(fClass.hasProperty(RDF.type,OWL.Class) && sClass.hasProperty(RDF.type,OWL.Class)){
+                subObjPair.add(new Pair<>(fClass,sClass));
             }
         }
-        return ontClasses;
+        return subObjPair;
+    }
+
+    /**
+     * 根据某个指定的属性关系从当前RDFModel中取出具有该关系的主宾对
+     * @param rel &nbsp 指定的属性间关系类型
+     * @return
+     */
+    @Override
+    public Queue<Pair<OntProperty, OntProperty>> relsBetweenProperties(PROPERTY_REL rel) {
+        Queue<Pair<OntProperty,OntProperty>> subObjPair = new LinkedList<>();
+        Selector selector = null;
+        switch (rel){
+            case SUBPROPERTY_OF:selector = new SimpleSelector(null,RDFS.subPropertyOf,(OntProperty)null);break;
+            case DISJOINT_WITH:selector = new SimpleSelector(null,OWL.disjointWith,(OntProperty)null);break;//TODO:是取owl:disjointWith还是owl:propertyDisjointWith还未可知
+            case EQUIVALENT_TO:selector = new SimpleSelector(null,OWL.equivalentProperty,(OntProperty)null);break;
+        }
+        StmtIterator iterator = ontModel.listStatements(selector);
+        while (iterator.hasNext()){
+            Statement statement = iterator.nextStatement();
+            OntProperty fProperty = ontModel.getOntProperty(statement.getSubject().getURI());
+            OntProperty sProperty = ontModel.getOntProperty(statement.getObject().asResource().getURI());
+            if((fProperty.hasProperty(RDF.type,OWL.ObjectProperty) && sProperty.hasProperty(RDF.type,OWL.ObjectProperty)) ||
+                    fProperty.hasProperty(RDF.type,OWL.DatatypeProperty) && sProperty.hasProperty(RDF.type,OWL.DatatypeProperty)){
+                subObjPair.add(new Pair<>(fProperty,sProperty));
+            }
+        }
+        return subObjPair;
+    }
+
+    /**
+     * 根据某个指定的实例关系从当前RDFModel中取出具有该关系的主宾对
+     * @param rel &nbsp 指定的实例间关系类型
+     * @return
+     */
+    @Override
+    public Queue<Pair<Individual, Individual>> relsBetweenIndividuals(INSTANCE_REL rel) {
+        Queue<Pair<Individual,Individual>> subObjPair = new LinkedList<>();
+        Selector selector = null;
+        switch (rel){
+            case SAME_AS:selector = new SimpleSelector(null,OWL.sameAs,(Individual) null);break;
+            case DIFFERENT_FROM:selector = new SimpleSelector(null,OWL.differentFrom,(Individual)null);break;
+        }
+        StmtIterator iterator = ontModel.listStatements(selector);
+        while(iterator.hasNext()){
+            Statement statement = iterator.nextStatement();
+            Individual fIns = ontModel.getIndividual(statement.getSubject().getURI());
+            Individual sIns = ontModel.getIndividual(statement.getObject().asResource().getURI());
+            if(fIns.isIndividual() && sIns.isIndividual()){
+                subObjPair.add(new Pair<>(fIns,sIns));
+            }
+        }
+        return subObjPair;
+    }
+
+    /**
+     * 返回此RDFModel中所有具有父子关系的父子类对(子类在前,父类在后)
+     * @return &nbsp 包含所有父子类对的队列
+     */
+    @Override
+    public Queue<Pair<OntClass, OntClass>> allSubClassOfRels() {
+        return relsBetweenClasses(CLASS_REL.SUBCLASS_OF);
+    }
+
+    /**
+     * 返回RDFModel中所有具有父子关系的父子属性对(子属性在前,父属性在后)
+     * @return &nbsp 包含所有父子属性对的队列
+     */
+    @Override
+    public Queue<Pair<OntProperty, OntProperty>> allSubPropertyOfRels() {
+        return relsBetweenProperties(PROPERTY_REL.SUBPROPERTY_OF);
+    }
+
+    /**
+     * 返回所有的rdfs:domain关系的主宾对
+     * 该方法能起到实际作用的前提是推理机设置了某个属性的定义域是几个类别的并集
+     * @return
+     */
+    @Override
+    public Queue<Pair<OntProperty, OntClass>> allRdfsDomainRels() {
+        Queue<Pair<OntProperty,OntClass>> subObjPair = new LinkedList<>();
+        Selector selector = new SimpleSelector(null,RDFS.domain,(OntClass)null);
+        StmtIterator iterator = ontModel.listStatements(selector);
+        while (iterator.hasNext()){
+            Statement statement = iterator.nextStatement();
+            OntProperty sub = ontModel.getOntProperty(statement.getSubject().getURI());
+            OntClass obj = ontModel.getOntClass(statement.getObject().asResource().getURI());
+            if((sub.hasProperty(RDF.type,OWL.DatatypeProperty) || sub.hasProperty(RDF.type,OWL.ObjectProperty))
+                    && obj.hasProperty(RDF.type,OWL.Class)){
+                subObjPair.add(new Pair<>(sub,obj));
+            }
+        }
+        return subObjPair;
+    }
+
+    /**
+     * 返回所有的rdfs:range关系的主宾对
+     * 该方法能起到实际作用的前提是推理机设置了某个属性的值域是几个类别的并集
+     * @return
+     */
+    @Override
+    public Queue<Pair<OntProperty, OntClass>> allRdfsRangeRels() {
+        Queue<Pair<OntProperty,OntClass>> subObjPair = new LinkedList<>();
+        Selector selector = new SimpleSelector(null,RDFS.range,(OntResource)null);
+        StmtIterator iterator = ontModel.listStatements(selector);
+        while (iterator.hasNext()){
+            Statement statement = iterator.nextStatement();
+            OntProperty sub = ontModel.getOntProperty(statement.getSubject().getURI());
+            OntClass obj = ontModel.getOntClass(statement.getObject().asResource().getURI());
+            if((sub.hasProperty(RDF.type,OWL.DatatypeProperty) || sub.hasProperty(RDF.type,OWL.ObjectProperty))
+                    && obj.hasProperty(RDF.type,OWL.Class)){
+                subObjPair.add(new Pair<>(sub,obj));
+            }
+        }
+        return subObjPair;
     }
 
 }
