@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class FileRdfProvider implements RdfProvider {
@@ -261,19 +262,13 @@ public class FileRdfProvider implements RdfProvider {
             Statement statement = iterator.nextStatement();
             OntProperty fProperty = ontModel.getOntProperty(statement.getSubject().getURI());
             OntProperty sProperty = ontModel.getOntProperty(statement.getObject().asResource().getURI());
-            if(fProperty == null && sProperty == null)
-                continue;
-            else if(fProperty == null)  //只有子属性为空
-                System.out.print("               ,父属性:" + sProperty.getURI());
-            else if(sProperty == null)  //只有父属性为空
-                System.out.print("子属性:" + fProperty.getURI() + ",");
-            else
-                System.out.print("子属性:" + fProperty.getURI() + "," + "父属性:" + sProperty.getURI());
-            System.out.println();
-            if((fProperty.hasProperty(RDF.type,OWL.ObjectProperty) && sProperty.hasProperty(RDF.type,OWL.ObjectProperty)) ||
-                    fProperty.hasProperty(RDF.type,OWL.DatatypeProperty) && sProperty.hasProperty(RDF.type,OWL.DatatypeProperty)){
-                subObjPair.add(new Pair<>(fProperty,sProperty));
+            if(sProperty == null){  //父属性为空,说明遇到了owl:topDataProperty或owl:topObjectProperty
+                sProperty = ontModel.getOntProperty(statement.getObject().asResource().getURI());
+                if(sProperty == null){
+                    sProperty = ontModel.createOntProperty(statement.getObject().asResource().getURI());
+                }
             }
+            subObjPair.add(new Pair<>(fProperty,sProperty));
         }
         return subObjPair;
     }
