@@ -262,11 +262,8 @@ public class FileRdfProvider implements RdfProvider {
             Statement statement = iterator.nextStatement();
             OntProperty fProperty = ontModel.getOntProperty(statement.getSubject().getURI());
             OntProperty sProperty = ontModel.getOntProperty(statement.getObject().asResource().getURI());
-            if(sProperty == null){  //父属性为空,说明遇到了owl:topDataProperty或owl:topObjectProperty
-                sProperty = ontModel.getOntProperty(statement.getObject().asResource().getURI());
-                if(sProperty == null){
-                    sProperty = ontModel.createOntProperty(statement.getObject().asResource().getURI());
-                }
+            if(fProperty == null || sProperty == null){
+                continue;
             }
             subObjPair.add(new Pair<>(fProperty,sProperty));
         }
