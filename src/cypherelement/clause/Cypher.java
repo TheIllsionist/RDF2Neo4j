@@ -1,253 +1,259 @@
 package cypherelement.clause;
 
-import concurrentannotation.ThreadSafe;
+import concurrentannotation.NotThreadSafe;
 import cypherelement.basic.*;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Cypher语句拼接工具
- * 该类只有一个ThreadLocal类型的状态,类中的所有方法也都没有引用其他类的公开域,只使用了虚拟机栈中的局部变量,因此是线程安全的
  * 注:该类只提供语句拼接作用,没有任何语法检查功能,使用该拼接工具的程序员必须要有一定的Cypher语法基础
  */
-@ThreadSafe
-class Cypher{
-    /**
-     * 使用ThreadLoacl<T>定义的变量是线程私有的,即多个访问该变量的线程,每个都有一个副本
-     * 利用匿名内部类复写ThreadLocal的initialValue()方法,每个线程第一次调用get方法时都会得到空串
-     */
-    private static ThreadLocal<String> cypher = new ThreadLocal<String>(){
-        @Override
-        public String initialValue(){
-            return "";
-        }
-    };
+@NotThreadSafe
+public class Cypher{
+
+    private static StringBuilder cypher = null;
+
+    public Cypher(){
+        cypher.append("");
+    }
 
 
-    public static void match(String matchClause){
-        cypher.set(cypher.get() + "match" + matchClause);
+    public Cypher match(String matchClause){
+        cypher.append("match" + matchClause);
+        return this;
     }
 
     /**
      * 拼接查询一个Neo4j节点的Cypher语句
      * @param node
+     * @return this
      */
-    public static void match(CypherNode node){
-        cypher.set(cypher.get() + "match" + node.toCypherStr());
+    public Cypher match(CypherNode node){
+        cypher.append("match" + node.toCypherStr());
+        return this;
     }
 
     /**
      * 拼接查询一个Neo4j路径的Cypher语句
      * @param path
+     * @return this
      */
-    public static void match(CypherPath path){
-        cypher.set(cypher.get() + "match" + path.toCypherStr());
+    public Cypher match(CypherPath path){
+        cypher.append("match").append(path.toCypherStr());
+        return this;
     }
 
     /**
      * 拼接查询多个Neo4j路径的Cypher语句
      * @param paths
+     * @return this
      */
-    public static void match(List<CypherPath> paths){
-        StringBuilder cypherbd = new StringBuilder();
-        cypherbd.append(cypher.get() + "match");
-        for (CypherPath path:paths) {
-            cypherbd.append(path.toCypherStr() + ",");
+    public Cypher match(List<CypherPath> paths){
+        cypher.append("match");
+        for(CypherPath path:paths){
+            cypher.append(path.toCypherStr() + ",");
         }
-        cypherbd.delete(cypherbd.length() - 1,cypherbd.length());
-        cypher.set(cypherbd.toString());
+        cypher.delete(cypher.length() - 1,cypher.length());
+        return this;
     }
 
-    public static void create(String createClause){
-        cypher.set(cypher.get() + "create " + createClause);
+    public Cypher create(String createClause){
+        cypher.append("create" + createClause);
+        return this;
     }
 
     /**
      * 拼接创建一个Neo4j节点的Cypher语句
      * @param node
+     * @return this
      */
-    public static void create(CypherNode node){
-        cypher.set(cypher.get() + "create" + node.toCypherStr());
+    public Cypher create(CypherNode node){
+        cypher.append("create" + node.toCypherStr());
+        return this;
     }
 
     /**
      * 拼接创建一个Neo4j路径的Cypher语句
      * @param path
      */
-    public static void create(CypherPath path){
-        cypher.set(cypher.get() + "create" + path.toCypherStr());
+    public Cypher create(CypherPath path){
+        cypher.append("create").append(path.toCypherStr());
+        return this;
     }
 
     /**
      * 拼接创建多个Neo4j路径的Cypher语句
      * @param paths
      */
-    public static void create(List<CypherPath> paths){
-        StringBuilder cypherbd = new StringBuilder();
-        cypherbd.append(cypher.get() + "create");
-        for (CypherPath path:paths) {
-            cypherbd.append(path.toCypherStr() + ",");
+    public Cypher create(List<CypherPath> paths){
+        cypher.append("create");
+        for(CypherPath path:paths){
+            cypher.append(path.toCypherStr() + ",");
         }
-        cypherbd.delete(cypherbd.length() - 1,cypherbd.length());
-        cypher.set(cypherbd.toString());
+        cypher.delete(cypher.length() - 1,cypher.length());
+        return this;
     }
 
-    public static void where(String whereClause){
-        cypher.set(cypher.get() + " where " + whereClause);
+    public Cypher where(String whereClause){
+        cypher.append(" where " + whereClause);
+        return this;
     }
 
     /**
      * 为当前Cypher语句添加Where子句和1个条件
      * @param condition
      */
-    public static void where(CypherCondition condition){
-        cypher.set(cypher.get() + " where " + condition.toCypherStr());
+    public Cypher where(CypherCondition condition){
+        cypher.append(" where " + condition.toCypherStr());
+        return this;
     }
 
     /**
      * 为当前Cypher语句添加Where子句和多个条件,多个条件之间用 'and '连接
      * @param conditions
      */
-    public static void where(Set<CypherCondition> conditions){
+    public Cypher where(Set<CypherCondition> conditions){
         if(conditions == null || conditions.size() == 0)
-            return;
-        StringBuilder builder = new StringBuilder();
-        builder.append(cypher.get());
-        builder.append(" where ( ");
-        for (CypherCondition condition : conditions) {
-            builder.append(condition.toCypherStr() + " and");
+            return this;
+        cypher.append(" where ( ");
+        for(CypherCondition condition : conditions){
+            cypher.append(condition.toCypherStr() + " and");
         }
-        builder.delete(builder.length() - 3,builder.length());
-        builder.append(")");
-        cypher.set(builder.toString());
+        cypher.delete(cypher.length() - 3,cypher.length());
+        cypher.append(")");
+        return this;
     }
 
-    public static void and(String newCondition){
-        cypher.set(cypher.get() + " and " + newCondition);
+    public Cypher and(String newCondition){
+        cypher.append(" and " + newCondition);
+        return this;
     }
 
     /**
      * 用and连接符为Where子句添加1条件
      * @param condition
      */
-    public static void and(CypherCondition condition){
-        cypher.set(cypher.get() + " and " + condition.toCypherStr());
+    public Cypher and(CypherCondition condition){
+        cypher.append(" and " + condition.toCypherStr());
+        return this;
     }
 
     /**
      * 用and连接符为Where子句添加多个条件,内部的多个条件默认使用' and '连接
      * @param conditions
      */
-    public static void and(Set<CypherCondition> conditions){
+    public Cypher and(Set<CypherCondition> conditions){
         if(conditions == null || conditions.size() == 0)
-            return;
-        StringBuilder builder = new StringBuilder();
-        builder.append(cypher.get() + " and ( ");
+            return this;
+        cypher.append(" and ( ");
         for(CypherCondition condition : conditions){
-            builder.append(condition.toCypherStr() + " and");
+            cypher.append(condition.toCypherStr() + " and");
         }
-        builder.delete(builder.length() - 3,builder.length());
-        builder.append(")");
-        cypher.set(builder.toString());
+        cypher.delete(cypher.length() - 3,cypher.length());
+        cypher.append(")");
+        return this;
     }
 
-    public static void or(String newCondition){
-        cypher.set(cypher.get() + " or " + newCondition);
+    public Cypher or(String newCondition){
+        cypher.append(" or " + newCondition);
+        return this;
     }
 
-    public static void or(CypherCondition condition){
-        cypher.set(cypher.get() + " or " + condition.toCypherStr());
+    public Cypher or(CypherCondition condition){
+        cypher.append(" or " + condition.toCypherStr());
+        return this;
     }
 
-    public static void or(Set<CypherCondition> conditions){
+    public Cypher or(Set<CypherCondition> conditions){
         if(conditions == null || conditions.size() == 0){
-            return;
+            return this;
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append(cypher.get() + " or ( ");
-        for (CypherCondition condition : conditions) {
-            builder.append(condition.toCypherStr() + " and");
+        cypher.append(" or ( ");
+        for(CypherCondition condition : conditions){
+            cypher.append(condition.toCypherStr() + " and");
         }
-        builder.delete(builder.length() - 3,builder.length());
-        builder.append(")");
-        cypher.set(builder.toString());
+        cypher.delete(cypher.length() - 3,cypher.length());
+        cypher.append(")");
+        return this;
     }
 
-    public static void set(String newCondition){
-        cypher.set(cypher.get() + " set " + newCondition);
+    public Cypher set(String newCondition){
+        cypher.append(" set " + newCondition);
+        return this;
     }
 
     /**
      * 为Set子句设置1个表达式
      * @param condition
      */
-    public static void set(CypherCondition condition){
-        cypher.set(cypher.get() + " set " + condition.toCypherStr());
+    public Cypher set(CypherCondition condition){
+        cypher.append(" set " + condition.toCypherStr());
+        return this;
     }
 
     /**
      * 为Set子句设置多个表达式,表达式之间使用' , '隔开
      * @param conditions
      */
-    public static void set(Set<CypherCondition> conditions){
+    public Cypher set(Set<CypherCondition> conditions){
         if(conditions == null || conditions.size() == 0){
-            return;
+            return this;
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append(cypher.get() + " set ");
-        for (CypherCondition condition : conditions) {
-            builder.append(condition.toCypherStr() + ",");
+        cypher.append(" set ");
+        for(CypherCondition condition : conditions){
+            cypher.append(condition.toCypherStr() + ",");
         }
-        builder.delete(builder.length() - 1,builder.length());
-        cypher.set(builder.toString());
+        cypher.delete(cypher.length() - 1,cypher.length());
+        return this;
     }
 
-    public static void wantReturn(String returnClause){
-        cypher.set(cypher.get() + " return " + returnClause);
+    public Cypher wantReturn(String returnClause){
+        cypher.append(" return " + returnClause);
+        return this;
     }
 
-    public static void wantReturn(CypherProperty property){
-        cypher.set(cypher.get() + " return " + property.toCypherStr());
+    public Cypher wantReturn(CypherProperty property){
+        cypher.append(" return " + property.toCypherStr());
+        return this;
     }
 
-    public static void wantReturn(List<CypherProperty> properties){
+    public Cypher wantReturn(List<CypherProperty> properties){
         if(properties == null || properties.size() == 0){
-            return;
+            return this;
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append(cypher.get() + " return ");
-        for (CypherProperty property : properties) {
-            builder.append(property.toCypherStr() + ",");
+        cypher.append(" return ");
+        for(CypherProperty property : properties){
+            cypher.append(property.toCypherStr() + ",");
         }
-        builder.delete(builder.length() - 1,builder.length());
-        cypher.set(builder.toString());
+        cypher.delete(cypher.length() - 1,cypher.length());
+        return this;
     }
 
-    public static void returnIdOf(CypherElement element){
-        cypher.set(cypher.get() + " return " + "id(" + element.getName() + ")");
+    public Cypher returnIdOf(CypherElement element){
+        cypher.append(" return id(" + element.getName() + ")");
+        return this;
     }
 
-    public static void returnIdOf(List<CypherElement> elements){
+    public Cypher returnIdOf(List<CypherElement> elements){
         if(elements == null || elements.size() == 0){
-            return;
+            return this;
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append(cypher.get() + " return ");
-        for (CypherElement element : elements) {
-            builder.append("id(" + element.getName() + "),");
+        cypher.append(" return ");
+        for(CypherElement element : elements){
+            cypher.append("id(" + element.toCypherStr() + "),");
         }
-        builder.delete(builder.length() - 1,builder.length());
-        cypher.set(builder.toString());
+        cypher.delete(cypher.length() - 1,cypher.length());
+        return this;
     }
 
     /**
      * 返回此次语句拼接的结果
-     * TODO://到网上搜一下如何避免ThreadLocal使用的内存泄漏问题
      * @return
      */
-    public static String getCypher(){
-        String cypherStr = cypher.get();
-        cypher.remove();   //每调用一次getCypher相当于一次拼接结束,为了防止内存泄漏,调用remove()方法
+    public String getCypher(){
+        String cypherStr = cypher.toString();
+        cypher.delete(0,cypher.length());  //返回拼接结果之后即清空builder缓存,使Cypher对象可以作为对象成员使用
         return cypherStr;
     }
 
