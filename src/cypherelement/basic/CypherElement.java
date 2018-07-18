@@ -46,7 +46,7 @@ public abstract class CypherElement extends CypherStr {
      * 给当前Cypher基本元素添加一个属性值对
      * @param pair
      */
-    protected void addCondition(PropValPair pair){
+    public void addCondition(PropValPair pair){
         int lastSize = properties.size();
         this.properties.add(pair);
         if(properties.size() > lastSize){  //属性值对真的有变化时再重新拼接
@@ -59,7 +59,7 @@ public abstract class CypherElement extends CypherStr {
      * 将某个属性值对从该Cypher基本元素中移除
      * @param pair
      */
-    protected void removeCondition(PropValPair pair){
+    public void removeCondition(PropValPair pair){
         int lastSize = properties.size();
         this.properties.remove(pair);
         if(properties.size() < lastSize){  //属性值对真的有变化时再重新拼接
