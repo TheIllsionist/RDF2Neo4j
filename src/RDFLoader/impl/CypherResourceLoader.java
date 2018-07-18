@@ -97,10 +97,10 @@ public class CypherResourceLoader{
         switch (word){
             case OWL_CLASS:builder.append(":OWL_CLASS ");break;
             case OWL_DATATYPEPROPERTY:builder.append(":OWL_DATATYPEPROPERTY ");break;
-            case OWL_OBJECTPROPERTY:builder.append("OWL_OBJECTPROPERTY ");break;
-            case OWL_NAMEDINDIVIDUAL:builder.append("OWL_NAMEDINDIVIDUAL ");break;
+            case OWL_OBJECTPROPERTY:builder.append(":OWL_OBJECTPROPERTY ");break;
+            case OWL_NAMEDINDIVIDUAL:builder.append(":OWL_NAMEDINDIVIDUAL ");break;
         }
-        builder.append("{preLabel:\"" + getPreLabel(resource.getURI()) + "\"} return id(n) ");
+        builder.append("{preLabel:\"" + getPreLabel(resource.getURI()) + "\"}) return id(n) ");
         String finalCypher = builder.toString();
         StatementResult mRst = getSession().run(finalCypher);
         if(mRst.hasNext()){

@@ -6,8 +6,8 @@ import dataSource.impl.FileRdfProvider;
 public class Test1 {
 
     public static void main(String args[]){
-        FileRdfProvider fileRdfProvider = new FileRdfProvider("/home/illsionist/Downloads/test.owl");
-        CypherResourceLoader loader = new CypherResourceLoader("bolt://223.3.78.231:7687","neo4j","kseqa");
+        FileRdfProvider fileRdfProvider = new FileRdfProvider("F:\\WGBQ_V3.owl");
+        CypherResourceLoader loader = new CypherResourceLoader("bolt://localhost:7687","neo4j","kseqa");
         loader.initGraph();  //首先要初始化
         loader.loadAllOntClasses(fileRdfProvider);  //加载本体模型中的所有类通过
         loader.loadAllOntProperties(fileRdfProvider); //加载本体模型中的所有属性(目前仅限数据类型属性和对象属性)通过
