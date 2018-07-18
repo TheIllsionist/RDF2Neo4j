@@ -47,6 +47,19 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
+     * 返回该RDF提供者拥有的根类集
+     * @return &nbsp 根类集合
+     */
+    public Set<OntClass> rootClasses(){
+        Set<OntClass> roots = new HashSet<>();
+        ExtendedIterator<OntClass> rootIter = ontModel.listHierarchyRootClasses();  //列出根类集
+        while(rootIter.hasNext()){
+            roots.add(rootIter.next());
+        }
+        return roots;
+    }
+
+    /**
      * 返回该RDF提供者拥有的所有类
      * @return &nbsp 类别集合
      */
