@@ -15,6 +15,7 @@ public class Cypher{
     private static StringBuilder cypher = null;
 
     public Cypher(){
+        cypher = new StringBuilder();
         cypher.append("");
     }
 
