@@ -1,4 +1,4 @@
-package rdfloader;
+package rdfImporter;
 
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;

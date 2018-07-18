@@ -1,7 +1,7 @@
-package rdfloader.impl;
+package rdfImporter.impl;
 
-import rdfloader.ResourceLoader;
-import rdfloader.Words;
+import rdfImporter.ResourceLoader;
+import rdfImporter.Words;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
