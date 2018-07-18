@@ -22,30 +22,6 @@ import java.util.Queue;
 public class FileRdfProviderTest {
     public static void main(String args[]){
         RdfProvider rdfProvider = new FileRdfProvider("F:\\");
-        CypherNode clsWord = null;
-        HashSet<PropValPair> props = new HashSet<>();
-        props.add(new PropValPair(new CypherProperty("preLabel"),new CypherValue("owl:Class")));
-        clsWord = new CypherNode("word","OWL_WORD",props){
-            @Override
-            public String propsToStr(){
-                if(properties == null || properties.size() == 0){
-                    return "";
-                }
-                StringBuilder builder = new StringBuilder();
-                builder.append("{");
-                for(PropValPair pair:properties){
-                    builder.append(pair.toInnerString()).append(",");
-                }
-                builder.delete(builder.length() - 1,builder.length());
-                builder.append("}");
-                return builder.toString();
-            }
-        };
-        System.out.println(clsWord.toCypherStr());
-        System.out.println(new Cypher().match(clsWord).getCypher());
-        clsWord.setProperties(null);
-        clsWord.setLabel(null);
-        System.out.println(clsWord.toCypherStr());
 //        Thread classThread = new Thread(new Runnable() {    //迭代类的线程
 //            @Override
 //            public void run() {
