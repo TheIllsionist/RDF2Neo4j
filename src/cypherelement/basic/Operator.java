@@ -4,6 +4,7 @@ package cypherelement.basic;
  * Cypher中的操作符
  */
 public enum  Operator{
+    COLON,  //默认冒号
     EQ_TO,  //等于
     UNEQ_TO,  //不等于
     BIG_THAN,  //大于
@@ -36,7 +37,8 @@ public enum  Operator{
             case IS_NULL:return " IS NULL ";
             case IS_NOT_NULL:return " IS NOT NULL ";
             case MATCH:return " =~ ";
+            case COLON:return " : ";
         }
-        return " = ";
+        return " : ";
     }
 }

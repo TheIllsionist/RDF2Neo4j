@@ -11,7 +11,7 @@ public class PropValPair extends CypherCondition {
     private CypherValue value = null;
 
     public PropValPair(CypherProperty property,CypherValue value){
-        this(property,Operator.EQ_TO,value);  //默认操作符是相等
+        this(property,Operator.COLON,value);  //默认操作符是冒号,Neo4j内置
     }
 
     public PropValPair(CypherProperty property, Operator operator, CypherValue value){
