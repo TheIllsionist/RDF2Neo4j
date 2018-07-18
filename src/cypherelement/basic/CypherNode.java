@@ -64,7 +64,7 @@ public class CypherNode extends CypherElement{
         if(name != null && !name.matches("\\s*")){
             builder.append(name);
         }
-        if(label != null && label.matches("\\s*")){
+        if(label != null && !label.matches("\\s*")){
             builder.append(":").append(label);
         }
         builder.append("" + propsFragment);
