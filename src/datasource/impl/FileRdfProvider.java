@@ -6,6 +6,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import util.CLASS_REL;
@@ -241,8 +242,8 @@ public class FileRdfProvider implements RdfProvider {
         Selector selector = null;
         switch (rel){
             case SUBCLASS_OF:selector = new SimpleSelector(null,RDFS.subClassOf,(OntClass)null);break; //是父子关系时,子类在前,父类在后
-            case DISJOINT_WITH:selector = new SimpleSelector(null,OWL.disjointWith,(OntClass)null);break;
-            case EQUIVALENT_TO:selector = new SimpleSelector(null,OWL.equivalentClass,(OntClass)null);break;
+            case DISJOINT_CLASS:selector = new SimpleSelector(null,OWL2.disjointWith,(OntClass)null);break;
+            case EQUIVALENT_CLASS:selector = new SimpleSelector(null,OWL.equivalentClass,(OntClass)null);break;
         }
         StmtIterator iterator = ontModel.listStatements(selector);
         while (iterator.hasNext()){
@@ -267,8 +268,9 @@ public class FileRdfProvider implements RdfProvider {
         Selector selector = null;
         switch (rel){
             case SUBPROPERTY_OF:selector = new SimpleSelector(null,RDFS.subPropertyOf,(OntProperty)null);break;
-            case DISJOINT_WITH:selector = new SimpleSelector(null,OWL.disjointWith,(OntProperty)null);break;//TODO:是取owl:disjointWith还是owl:propertyDisjointWith还未可知
-            case EQUIVALENT_TO:selector = new SimpleSelector(null,OWL.equivalentProperty,(OntProperty)null);break;
+            case DISJOINT_PROPERTY:selector = new SimpleSelector(null, OWL2.propertyDisjointWith,(OntProperty)null);break;
+            case EQUIVALENT_PROPERTY:selector = new SimpleSelector(null,OWL.equivalentProperty,(OntProperty)null);break;
+            case INVERSE_OF:selector = new SimpleSelector(null,OWL2.inverseOf,(OntProperty)null);break;
         }
         StmtIterator iterator = ontModel.listStatements(selector);
         while (iterator.hasNext()){
