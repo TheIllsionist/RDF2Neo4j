@@ -5,7 +5,7 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
 import org.neo4j.graphdb.Node;
 
-public interface ResourceLoader {
+public interface ResourceImporter {
 
     void initGraph();
 

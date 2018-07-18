@@ -1,11 +1,17 @@
 package test;
 
+import cypherelement.basic.CypherNode;
+import cypherelement.basic.CypherProperty;
+import cypherelement.basic.CypherValue;
+import cypherelement.basic.PropValPair;
+import cypherelement.clause.Cypher;
 import datasource.RdfProvider;
 import datasource.impl.FileRdfProvider;
 import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.Literal;
 import util.Pair;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -16,6 +22,30 @@ import java.util.Queue;
 public class FileRdfProviderTest {
     public static void main(String args[]){
         RdfProvider rdfProvider = new FileRdfProvider("F:\\");
+        CypherNode clsWord = null;
+        HashSet<PropValPair> props = new HashSet<>();
+        props.add(new PropValPair(new CypherProperty("preLabel"),new CypherValue("owl:Class")));
+        clsWord = new CypherNode("word","OWL_WORD",props){
+            @Override
+            public String propsToStr(){
+                if(properties == null || properties.size() == 0){
+                    return "";
+                }
+                StringBuilder builder = new StringBuilder();
+                builder.append("{");
+                for(PropValPair pair:properties){
+                    builder.append(pair.toInnerString()).append(",");
+                }
+                builder.delete(builder.length() - 1,builder.length());
+                builder.append("}");
+                return builder.toString();
+            }
+        };
+        System.out.println(clsWord.toCypherStr());
+        System.out.println(new Cypher().match(clsWord).getCypher());
+        clsWord.setProperties(null);
+        clsWord.setLabel(null);
+        System.out.println(clsWord.toCypherStr());
 //        Thread classThread = new Thread(new Runnable() {    //迭代类的线程
 //            @Override
 //            public void run() {
@@ -76,23 +106,23 @@ public class FileRdfProviderTest {
 //                System.out.println("父子类关系数目为 : " + count + " ");
 //            }
 //        });
-        Thread subPropOfThread = new Thread(new Runnable() {  //迭代父子属性关系的线程
-            @Override
-            public void run() {
-                int count = 0;
-                Queue<Pair<OntProperty,OntProperty>> pairs = rdfProvider.allSubPropertyOfRels();
-                while (!pairs.isEmpty()) {
-                    Pair<OntProperty,OntProperty> tmpPair = pairs.poll();
-                    System.out.println("属性:" + tmpPair.getFirst().getURI() + "是属性:" + tmpPair.getSecond().getURI() + "的子属性");
-                    count++;
-                }
-                System.out.println("父子属性关系数目为 : " + count + " ");
-            }
-        });
+//        Thread subPropOfThread = new Thread(new Runnable() {  //迭代父子属性关系的线程
+//            @Override
+//            public void run() {
+//                int count = 0;
+//                Queue<Pair<OntProperty,OntProperty>> pairs = rdfProvider.allSubPropertyOfRels();
+//                while (!pairs.isEmpty()) {
+//                    Pair<OntProperty,OntProperty> tmpPair = pairs.poll();
+//                    System.out.println("属性:      " + tmpPair.getFirst().getURI() + "      是属性:      " + tmpPair.getSecond().getURI() + "     的子属性");
+//                    count++;
+//                }
+//                System.out.println("父子属性关系数目为 : " + count + " ");
+//            }
+//        });
 //        classThread.start();
 //        dpThread.start();
 //        opThread.start();
 //        subClsOfThread.start();
-        subPropOfThread.start();//TODO:出现空指针异常!!!! 由于topDatatypeProperty不能根据uri被查到(263行)的原因
+//        subPropOfThread.start();//TODO:出现空指针异常!!!! 由于topDatatypeProperty不能根据uri被查到(263行)的原因
     }
 }

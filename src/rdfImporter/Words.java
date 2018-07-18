@@ -1,7 +1,6 @@
-package rdfloader;
+package rdfImporter;
 
 public enum Words {
-
     OWL_CLASS,
     OWL_DATATYPEPROPERTY,
     OWL_OBJECTPROPERTY,

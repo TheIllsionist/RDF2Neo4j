@@ -1,6 +1,6 @@
 package rdfImporter.impl;
 
-import rdfImporter.ResourceLoader;
+import rdfImporter.ResourceImporter;
 import rdfImporter.Words;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
@@ -10,7 +10,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 import java.io.File;
 
-public class ApiResourceLoader implements ResourceLoader{
+public class ApiResourceImporter implements ResourceImporter {
 
     /** 数据库实例是多线程安全的,但是一个库同时只能创建一个实例 **/
     private static GraphDatabaseService graphDb = null;
@@ -23,7 +23,7 @@ public class ApiResourceLoader implements ResourceLoader{
         RDFS_SUBPROPERTYOF //rdfs:subPropertyOf,用来描述属性之间的上下位关系
     }
 
-    public ApiResourceLoader(){
+    public ApiResourceImporter(){
         //TODO:原生API不可以链接远程Neo4j数据库吗?
         this.graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(new File("/opt/Neo4j/neo4j-community-3.3.3/data/database/rdfDb"));
         registerShutdownHook(this.graphDb);
@@ -33,12 +33,12 @@ public class ApiResourceLoader implements ResourceLoader{
      * 构造函数,传入Neo4j数据库路径,如果路径下没有该指定数据库,新库会被创建
      * @param dbPath
      */
-    public ApiResourceLoader(String dbPath){
+    public ApiResourceImporter(String dbPath){
         this.graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(new File(dbPath));
         registerShutdownHook(this.graphDb);
     }
 
-    public ApiResourceLoader(GraphDatabaseService graphDb){
+    public ApiResourceImporter(GraphDatabaseService graphDb){
         this.graphDb = graphDb;
         registerShutdownHook(this.graphDb);
     }
