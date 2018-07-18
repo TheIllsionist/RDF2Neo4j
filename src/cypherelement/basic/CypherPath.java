@@ -23,7 +23,7 @@ public class CypherPath extends CypherStr {
      * @return
      * @throws Exception
      */
-    public CypherPath isConnectedThrough(CypherLeftRelationship leftRel) throws Exception{
+    public CypherPath isConnectedThrough(CypherRelationship leftRel) throws Exception{
         if(elements.getLast() instanceof CypherRelationship){
             throw new Exception("不合法的CypherPath:没有关系" + leftRel.getName() + "的尾节点!");
         }
@@ -38,7 +38,7 @@ public class CypherPath extends CypherStr {
      * @return
      * @throws Exception
      */
-    public CypherPath connectThrough(CypherRightRelationship rightRel) throws Exception{
+    public CypherPath connectThrough(CypherRelationship rightRel) throws Exception{
         if(elements.getLast() instanceof CypherRelationship){  //代表当前Path的链表的最后一个元素不是Node而是Relationship
             throw new Exception("不合法的CypherPath:没有关系" + rightRel.getName() + "的头节点!");
         }
