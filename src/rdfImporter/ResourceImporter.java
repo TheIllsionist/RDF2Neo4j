@@ -7,28 +7,28 @@ import org.neo4j.graphdb.Node;
 
 public interface ResourceImporter {
 
-    void initGraph();
+    void initGraph() throws Exception;
 
     /**
      * 将某个类作为Node存入Neo4j
      * @param ontClass
      * @return
      */
-    Node loadClassAsNode(OntClass ontClass);
+    Node loadClassAsNode(OntClass ontClass) throws Exception;
 
     /**
      * 将某个属性作为Node存入Neo4j
      * @param ontProperty
      * @return
      */
-    Node loadPropertyAsNode(OntProperty ontProperty);
+    Node loadPropertyAsNode(OntProperty ontProperty) throws Exception;
 
     /**
      * 将某个实例作为Node存入Neo4j
      * @param individual
      * @return
      */
-    Node loadIndividualAsNode(Individual individual);
+    Node loadIndividualAsNode(Individual individual) throws Exception;
 
 
 
