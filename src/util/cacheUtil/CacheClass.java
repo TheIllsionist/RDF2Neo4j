@@ -1,5 +1,6 @@
 package util.cacheUtil;
 
+import concurrentannotation.GuardedBy;
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
 import org.neo4j.driver.v1.StatementResult;
@@ -10,12 +11,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Created by The Illsionist on 2018/7/17.
  * 类缓存
  * 在知识库中类的数目是有限的,因此类缓存缓存全部的类
- * 只有一个线程写类缓存,多个线程读类缓存
+ * 只有一个线程写类缓存,多个线程读类缓存,写读是互斥的,但读读不互斥
  */
 @ThreadSafe
 public class CacheClass {
 
-    private static HashSet<String> classes = new HashSet<>();  //类缓存,当前实现为只缓存preLabel字符串
+    @GuardedBy("lock") private static HashSet<String> classes = new HashSet<>();//类缓存,当前实现为只缓存preLabel字符串
     private static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     static {  //类加载时即查询知识库中的已有类
