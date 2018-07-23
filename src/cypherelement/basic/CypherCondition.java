@@ -37,7 +37,11 @@ public abstract class CypherCondition extends CypherStr{
 
     @Override
     protected String appendCypher(){
-        return this.accProp.toCypherStr() + " " + operator.toString();
+        if(this.accProp == null){
+            return " " + operator.toString();
+        }else{
+            return this.accProp.toCypherStr() + " " + operator.toString();
+        }
     }
 
 }
