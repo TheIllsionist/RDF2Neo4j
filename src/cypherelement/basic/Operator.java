@@ -24,20 +24,20 @@ public enum  Operator{
     @Override
     public String toString() {
         switch (this){
-            case EQ_TO:return " = ";
-            case UNEQ_TO:return " <> ";
-            case BIG_THAN:return " > ";
-            case SM_THAN:return " < ";
-            case BIG_OR_EQ:return " >= ";
-            case SM_OR_EQ:return " <= ";
+            case EQ_TO:return "=";
+            case UNEQ_TO:return "<>";
+            case BIG_THAN:return ">";
+            case SM_THAN:return "<";
+            case BIG_OR_EQ:return ">=";
+            case SM_OR_EQ:return "<=";
             case IN:return " IN ";
             case CONTAINS:return " CONTAINS ";
             case STARTS_WITH:return " STARTS WITH ";
             case ENDS_WITH:return " ENDS WITH ";
             case IS_NULL:return " IS NULL ";
             case IS_NOT_NULL:return " IS NOT NULL ";
-            case MATCH:return " =~ ";
-            case COLON:return " : ";
+            case MATCH:return "=~";
+            case COLON:return ":";
         }
         return " : ";
     }

@@ -32,7 +32,7 @@ public class PropValPair extends CypherCondition {
 
     @Override
     protected String appendCypher(){
-        return super.appendCypher() + " " + value.toCypherStr();
+        return super.appendCypher() + value.toCypherStr();
     }
 
     /**
