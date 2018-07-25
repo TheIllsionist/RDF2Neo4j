@@ -106,14 +106,15 @@ public class CypherRelationship extends CypherElement{
         if(type != null && !type.matches("\\s*")){
             builder.append(":").append(type);
         }
-        builder.append("*");
         if(minDepth != maxDepth){
-            builder.append(minDepth).append("..");  //设置最小层数
+            builder.append("*").append(minDepth).append("..");  //设置最小层数
             if(maxDepth != Integer.MAX_VALUE){ //当最大层数为Integer.MAX_VALUE时,表明没有层数限制
                 builder.append(maxDepth);
             }
         }else {
-            builder.append(minDepth);
+            if(minDepth != 1){
+                builder.append("*").append(minDepth);
+            }
         }
         builder.append(" " + propsFragment);
         builder.append("]");

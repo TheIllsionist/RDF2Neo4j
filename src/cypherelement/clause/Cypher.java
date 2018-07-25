@@ -105,7 +105,7 @@ public class Cypher{
      * 为当前Cypher语句添加Where子句和1个条件
      * @param condition
      */
-    public Cypher where(CypherCondition condition){
+    public Cypher where(PropCondition condition){
         cypher.append(" where " + condition.toCypherStr());
         return this;
     }
@@ -114,11 +114,11 @@ public class Cypher{
      * 为当前Cypher语句添加Where子句和多个条件,多个条件之间用 'and '连接
      * @param conditions
      */
-    public Cypher where(Set<CypherCondition> conditions){
+    public Cypher where(Set<PropCondition> conditions){
         if(conditions == null || conditions.size() == 0)
             return this;
         cypher.append(" where ( ");
-        for(CypherCondition condition : conditions){
+        for(PropCondition condition : conditions){
             cypher.append(condition.toCypherStr() + " and");
         }
         cypher.delete(cypher.length() - 3,cypher.length());
@@ -135,7 +135,7 @@ public class Cypher{
      * 用and连接符为Where子句添加1条件
      * @param condition
      */
-    public Cypher and(CypherCondition condition){
+    public Cypher and(PropCondition condition){
         cypher.append(" and " + condition.toCypherStr());
         return this;
     }
@@ -144,11 +144,11 @@ public class Cypher{
      * 用and连接符为Where子句添加多个条件,内部的多个条件默认使用' and '连接
      * @param conditions
      */
-    public Cypher and(Set<CypherCondition> conditions){
+    public Cypher and(Set<PropCondition> conditions){
         if(conditions == null || conditions.size() == 0)
             return this;
         cypher.append(" and ( ");
-        for(CypherCondition condition : conditions){
+        for(PropCondition condition : conditions){
             cypher.append(condition.toCypherStr() + " and");
         }
         cypher.delete(cypher.length() - 3,cypher.length());
@@ -161,17 +161,17 @@ public class Cypher{
         return this;
     }
 
-    public Cypher or(CypherCondition condition){
+    public Cypher or(PropCondition condition){
         cypher.append(" or " + condition.toCypherStr());
         return this;
     }
 
-    public Cypher or(Set<CypherCondition> conditions){
+    public Cypher or(Set<PropCondition> conditions){
         if(conditions == null || conditions.size() == 0){
             return this;
         }
         cypher.append(" or ( ");
-        for(CypherCondition condition : conditions){
+        for(PropCondition condition : conditions){
             cypher.append(condition.toCypherStr() + " and");
         }
         cypher.delete(cypher.length() - 3,cypher.length());

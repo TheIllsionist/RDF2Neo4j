@@ -6,7 +6,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
  * 属性值对,为了使用方便,将Cypher属性,Cypher值和Cypher操作符组合为属性值对类
  * PropValPair既可以转换为Match子句或Create子句的内置Cypher片段,也可以作为Where子句或Set子句的片段
  */
-public class PropValPair extends CypherCondition {
+public class PropValPair extends PropCondition {
 
     private CypherValue value = null;
 

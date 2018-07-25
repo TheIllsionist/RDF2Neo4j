@@ -3,7 +3,7 @@ package cypherelement.basic;
 /**
  * 属性名对,可以作为Where子句的条件,也可以作为Set子句的参数
  */
-public class PropPropPair extends CypherCondition{
+public class PropPropPair extends PropCondition {
 
     private CypherProperty appProp = null;  //施动属性
 
