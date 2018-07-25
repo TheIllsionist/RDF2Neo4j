@@ -22,7 +22,7 @@ public class CacheClass {
     static {  //类加载时即查询知识库中的已有类
         StatementResult res = Neo4jConnection.getSession().run("match(cls:OWL_CLASS) return cls.preLabel");
         while (res.hasNext()){
-            classes.add(res.next().toString());
+            classes.add(res.next().get(0).asString());
         }
     }
 
