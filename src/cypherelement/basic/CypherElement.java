@@ -2,6 +2,7 @@ package cypherelement.basic;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -56,12 +57,17 @@ public abstract class CypherElement extends CypherStr {
     }
 
     /**
-     * 将某个属性值对从该Cypher基本元素中移除
-     * @param pair
+     * 将某个属性从该Cypher基本元素中移除
+     * @param property
      */
-    public void removeCondition(PropValPair pair){
+    public void removeCondition(CypherProperty property){
         int lastSize = properties.size();
-        this.properties.remove(pair);
+        Iterator<PropValPair> pvpIter = properties.iterator();
+        while(pvpIter.hasNext()){
+            if(pvpIter.next().getAccProp().equals(property)){
+                pvpIter.remove();
+            }
+        }
         if(properties.size() < lastSize){  //属性值对真的有变化时再重新拼接
             this.propsFragment = propsToStr();
             this.cypherFragment = appendCypher();
