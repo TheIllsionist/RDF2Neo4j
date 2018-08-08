@@ -96,6 +96,43 @@ public class Cypher{
         return this;
     }
 
+    public Cypher merge(String createClause){
+        cypher.append("merge" + createClause);
+        return this;
+    }
+
+    /**
+     * 拼接创建一个Neo4j节点的Cypher语句
+     * @param node
+     * @return this
+     */
+    public Cypher merge(CypherNode node){
+        cypher.append("merge" + node.toCypherStr());
+        return this;
+    }
+
+    /**
+     * 拼接创建一个Neo4j路径的Cypher语句
+     * @param path
+     */
+    public Cypher merge(CypherPath path){
+        cypher.append("merge").append(path.toCypherStr());
+        return this;
+    }
+
+    /**
+     * 拼接创建多个Neo4j路径的Cypher语句
+     * @param paths
+     */
+    public Cypher merge(List<CypherPath> paths){
+        cypher.append("merge");
+        for(CypherPath path:paths){
+            cypher.append(path.toCypherStr() + ",");
+        }
+        cypher.delete(cypher.length() - 1,cypher.length());
+        return this;
+    }
+
     public Cypher where(String whereClause){
         cypher.append(" where " + whereClause);
         return this;
