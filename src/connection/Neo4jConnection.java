@@ -10,7 +10,7 @@ import org.neo4j.driver.v1.Session;
  * 线程安全的Neo4j会话,用以获取Session和关闭Session
  */
 @ThreadSafe
-public class Neo4jConnection {
+public class Neo4jConnection {    //TODO:后续还是换成连接池来实现吧
 
     private static Driver driver = null;  //静态成员,全局只有一个
 
