@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FileRdfProviderTest {
     public static void main(String args[]) throws Exception {
         RdfProvider rdfProvider = new FileRdfProvider("F:\\");
-        CypherResourceImporter importer = new CypherResourceImporter(rdfProvider);
+        CypherResourceImporter importer = new CypherResourceImporter();
         Set<OntClass> classes = rdfProvider.allOntClasses();
         Iterator<OntClass> classIterator = classes.iterator();
         while(classIterator.hasNext()){
