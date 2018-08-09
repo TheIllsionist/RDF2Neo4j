@@ -46,7 +46,7 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public Node loadClassAsNode(OntClass ontClass) throws Exception{
-        if(!CacheClass.isContained(CypherUtil.getPreLabel(ontClass.getURI()))){ //可能之前导入的类会与当前知识源中的类有重合
+        if(!CacheClass.isClassContained(CypherUtil.getPreLabel(ontClass.getURI()))){ //可能之前导入的类会与当前知识源中的类有重合
             String cypher = CypherUtil.intoClsCypher(ontClass);
             Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() {
                 @Override
