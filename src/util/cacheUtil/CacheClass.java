@@ -56,7 +56,7 @@ public class CacheClass {
 
     /**
      * 往缓存中写入新类,缓存写入紧接着知识库写入并且一定要在知识库写入之后(禁止指令重排序)
-     * 因为只有一个线程写知识库和写类缓存,所以知识库的写入和缓存的写入可以不在一个原子操作内,这也是造成误判的原因
+     * 因为只有一个线程写类缓存,所以知识库的写入和缓存的写入可以不在一个原子操作内,这也是造成误判的原因
      * @param preLabel &nbsp 唯一标识该类的preLabel
      */
     public static void addClass(String preLabel){
