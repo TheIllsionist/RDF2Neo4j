@@ -6,15 +6,12 @@ import javafx.beans.property.Property;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
-import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import org.neo4j.graphdb.Node;
+import rdfImporter.ClassImporter;
+import rdfImporter.PropertyImporter;
 import rdfImporter.ResourceImporter;
 import util.CypherUtil;
-import util.cacheUtil.CacheClass;
-import util.cacheUtil.CacheProperty;
 
 /**
  * Created by The Illsionist on 2018/7/18.
@@ -23,14 +20,13 @@ import util.cacheUtil.CacheProperty;
 @ThreadSafe
 public class CypherResourceImporter implements ResourceImporter{
 
-    
-
     public CypherResourceImporter(){
 
     }
 
     /**
      * 导入任何RDF数据前都要确保图数据库中已经存在了词汇结点
+     * 初始化工作必须允许多次执行而不相互冲突
      */
     public void initGraph() {
         Neo4jConnection.getSession().writeTransaction(new TransactionWork<Object>() {
@@ -50,24 +46,7 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public boolean loadClassIn(OntClass ontClass) throws Exception{
-        if(!CacheClass.isClassContained(CypherUtil.getPreLabel(ontClass.getURI()))){ //当前数据库中不存在该类
-            try{
-                String cypher = CypherUtil.intoClsCypher(ontClass);
-                Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() {
-                    @Override
-                    public Integer execute(Transaction transaction) {
-                        StatementResult mRst = transaction.run(cypher);
-                        return mRst.single().get(0).asInt();
-                    }
-                });
-            }catch (NoSuchRecordException nRec){  //可能是因为图未经初始化所以返回空集
-                System.out.println("Import failure of class: " + CypherUtil.getPreLabel(ontClass.getURI()) +
-                        ". Maybe because of lack of initialization.");
-                throw nRec;
-            }
-            CacheClass.addClass(CypherUtil.getPreLabel(ontClass.getURI()));  //写缓存
-        }
-        return true;  //TODO:目前先实现返回true
+        return ClassImporter.loadClassIn(ontClass);
     }
 
     /**
@@ -79,29 +58,12 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public boolean loadPropertyIn(OntProperty ontProperty) throws Exception{
-        if(!CacheProperty.isPropertyContained(CypherUtil.getPreLabel(ontProperty.getURI()))){
-            try {
-                String cypher = CypherUtil.intoPropCypher(ontProperty);
-                Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() {
-                    @Override
-                    public Integer execute(Transaction transaction) {
-                        StatementResult mRst = transaction.run(cypher);
-                        return mRst.single().get(0).asInt();
-                    }
-                });
-            }catch (NoSuchRecordException nRec){
-                System.out.println("Import failure of property: " + CypherUtil.getPreLabel(ontProperty.getURI()) +
-                        ". Maybe because of lack of initialization.");
-                throw nRec;
-            }
-            CacheProperty.addProperty(CypherUtil.getPreLabel(ontProperty.getURI()));
-        }
-        return true;
+        return PropertyImporter.loadPropertyIn(ontProperty);
     }
 
     @Override
     public boolean loadIndividualIn(Individual individual) {
-
+        return false;
     }
 
     @Override

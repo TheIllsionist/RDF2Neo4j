@@ -2,6 +2,7 @@ package util;
 import cypherelement.basic.*;
 import cypherelement.clause.Cypher;
 import org.apache.jena.ontology.Individual;
+import org.apache.jena.ontology.ObjectProperty;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
 import org.apache.jena.rdf.model.Property;
@@ -372,5 +373,20 @@ public class CypherUtil {
         return cypher.getCypher();
     }
 
+    public static String intoRelCypher(OntClass class1,OntClass class2,CLASS_REL rel){
+        return null;
+    }
+
+    public static String intoRelCypher(OntProperty prop1,OntProperty prop2,PROPERTY_REL rel){
+        return null;
+    }
+
+    public static String intoRelCypher(Individual ins1,Individual ins2,INSTANCE_REL rel){
+        return null;
+    }
+
+    public static String intoRelCypher(Individual ins1, Individual ins2, ObjectProperty prop){
+        return null;
+    }
 
 }
