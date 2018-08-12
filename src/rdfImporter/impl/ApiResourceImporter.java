@@ -1,5 +1,6 @@
 package rdfImporter.impl;
 
+import javafx.beans.property.Property;
 import rdfImporter.ResourceImporter;
 import rdfImporter.Words;
 import org.apache.jena.ontology.Individual;
@@ -44,14 +45,13 @@ public class ApiResourceImporter implements ResourceImporter {
     }
 
 
-    private Node loadWordAsNode(Words word) {
-        return null;
+    private boolean loadWordIn(Words word) {
+        return false;
     }
 
     /**
      * 图的初始化
      */
-    @Override
     public void initGraph() {
         try(Transaction tx = graphDb.beginTx()){
 
@@ -59,18 +59,33 @@ public class ApiResourceImporter implements ResourceImporter {
     }
 
     @Override
-    public Node loadClassAsNode(OntClass ontClass) {
-        return null;
+    public boolean loadClassIn(OntClass ontClass) {
+        return false;
     }
 
     @Override
-    public Node loadPropertyAsNode(OntProperty ontProperty) {
-        return null;
+    public boolean loadPropertyIn(OntProperty ontProperty) {
+        return false;
     }
 
     @Override
-    public Node loadIndividualAsNode(Individual individual) {
-        return null;
+    public boolean loadIndividualIn(Individual individual) {
+        return false;
+    }
+
+    @Override
+    public boolean loadClassRelIn(OntClass ontClass1, OntClass ontClass2, Property property) throws Exception {
+        return false;
+    }
+
+    @Override
+    public boolean loadPropertyRelIn(OntProperty ontProperty1, OntProperty ontProperty2, Property property) throws Exception {
+        return false;
+    }
+
+    @Override
+    public boolean loadInsRelIn(Individual ins1, Individual ins2, Property property) throws Exception {
+        return false;
     }
 
 

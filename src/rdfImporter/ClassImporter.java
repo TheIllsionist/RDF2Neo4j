@@ -9,7 +9,6 @@ import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import util.CLASS_REL;
 import util.CypherUtil;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ClassImporter {
