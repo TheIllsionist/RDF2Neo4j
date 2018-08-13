@@ -1,4 +1,4 @@
-package rdfImporter.impl;
+package rdfImporter.impl.cypherImpl;
 
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
@@ -8,8 +8,6 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
-import rdfImporter.ClassImporter;
-import rdfImporter.PropertyImporter;
 import rdfImporter.ResourceImporter;
 import util.CypherUtil;
 
@@ -46,7 +44,7 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public boolean loadClassIn(OntClass ontClass) throws Exception{
-        return ClassImporter.loadClassIn(ontClass);
+        return CypherClassImporter.loadClassIn(ontClass);
     }
 
     /**
@@ -58,7 +56,7 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public boolean loadPropertyIn(OntProperty ontProperty) throws Exception{
-        return PropertyImporter.loadPropertyIn(ontProperty);
+        return CypherPropImporter.loadPropertyIn(ontProperty);
     }
 
     @Override

@@ -13,7 +13,7 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import rdfImporter.Words;
+
 import java.security.InvalidParameterException;
 import java.util.*;
 
@@ -373,8 +373,55 @@ public class CypherUtil {
         return cypher.getCypher();
     }
 
-    public static String intoRelCypher(OntClass class1,OntClass class2,CLASS_REL rel){
-        return null;
+    /**
+     * 拼接将两个类之间的某种关系写入Neo4j数据库的Cypher语句
+     * @param class1 &nbsp 先序关系中的第1个类
+     * @param class2 &nbsp 先序关系中的第2个类
+     * @param rel &nbsp 要写入的关系
+     * @return
+     * @throws Exception
+     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
+     */
+    public static String intoRelCypher(OntClass class1,OntClass class2,CLASS_REL rel) throws Exception{
+        Cypher cypher = new Cypher();
+        Set<PropValPair> props = new HashSet<>();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(class1.getURI()))));
+        CypherNode cls1 = new CypherNode("cls1","OWL_CLASS",props);
+        props.clear();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(class2.getURI()))));
+        CypherNode cls2 = new CypherNode("cls2","OWL_CLASS",props);
+        List<CypherNode> nodes = new ArrayList<>();
+        nodes.add(cls1);
+        nodes.add(cls2);
+        cypher.match(nodes);  //拼接查询两个类的cypher语句
+        cls1.setLabel(null);
+        cls1.setProperties(null);
+        cls2.setLabel(null);
+        cls2.setProperties(null);
+        props.clear();
+        CypherRelationship relation = new CypherRightRelationship();
+        switch (rel){
+            case SUBCLASS_OF:{
+                relation.setType("RDFS_SUBCLASSOF");
+                props.add(new PropValPair(propUri,new CypherValue(RDFS.subClassOf.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(RDFS.subClassOf.getURI()))));
+            }break;
+            case EQUIVALENT_CLASS:{
+                relation.setType("EQUIVALENT_CLASS");
+                props.add(new PropValPair(propUri,new CypherValue(OWL2.equivalentClass.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.equivalentClass.getURI()))));
+            }break;
+            case DISJOINT_CLASS:{
+                relation.setType("DISJOINT_CLASS");
+                props.add(new PropValPair(propUri,new CypherValue(OWL2.disjointWith.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.disjointWith.getURI()))));
+            }break;
+        }
+        relation.setName("r");
+        relation.setProperties(props);
+        CypherPath path = new CypherPath(cls1).connectThrough(relation).with(cls2);
+        cypher.create(path).returnIdOf(relation);
+        return cypher.getCypher();
     }
 
     public static String intoRelCypher(OntProperty prop1,OntProperty prop2,PROPERTY_REL rel){

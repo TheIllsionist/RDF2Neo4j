@@ -1,17 +1,15 @@
-package rdfImporter;
+package rdfImporter.abs.cypherAbs;
 
 import connection.Neo4jConnection;
-import org.apache.jena.ontology.OntProperty;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
-import org.neo4j.driver.v1.Transaction;
-import org.neo4j.driver.v1.TransactionWork;
-import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import util.CypherUtil;
-
+import rdfImporter.PropImporter;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class PropertyImporter {
+/**
+ * Created by The Illsionist on 2018/8/13.
+ */
+public abstract class AbsCypherPropImporter implements PropImporter {
 
     /**
      * 属性及其关系缓存
@@ -21,7 +19,7 @@ public class PropertyImporter {
      * 多个线程读关系,多个线程写关系,但每个线程所写关系种类不同,一个线程只写某个特定类别的关系
      * 在缓存中用一个整型变量表征两个属性之间的关系：1-subPropertyOf,2-equivalentProperty,3-disjointProperty,4-inverseOf
      */
-    static class CacheProperty{
+    protected static class CacheProperty{
         /** 利用静态初始化器保证对象引用的可见性,当前实现为只缓存preLabel字符串 **/
         private static ConcurrentHashMap<String,ConcurrentHashMap<String,Integer>> propWithRels = new ConcurrentHashMap<>();
 
@@ -89,26 +87,5 @@ public class PropertyImporter {
         public static void addRelation(String fPre,String lPre,int tag){
             propWithRels.get(fPre).put(lPre,tag);
         }
-    }
-
-    public static boolean loadPropertyIn(OntProperty ontProperty) throws Exception{
-        if(!CacheProperty.isPropertyContained(CypherUtil.getPreLabel(ontProperty.getURI()))){
-            try {
-                String cypher = CypherUtil.intoPropCypher(ontProperty);
-                Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() {
-                    @Override
-                    public Integer execute(Transaction transaction) {
-                        StatementResult mRst = transaction.run(cypher);
-                        return mRst.single().get(0).asInt();
-                    }
-                });
-            }catch (NoSuchRecordException nRec){
-                System.out.println("Import failure of property: " + CypherUtil.getPreLabel(ontProperty.getURI()) +
-                        ". Maybe because of lack of initialization.");
-                throw nRec;
-            }
-            CacheProperty.addProperty(CypherUtil.getPreLabel(ontProperty.getURI()));
-        }
-        return true;
     }
 }

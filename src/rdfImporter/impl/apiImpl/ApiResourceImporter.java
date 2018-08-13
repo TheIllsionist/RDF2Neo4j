@@ -1,8 +1,8 @@
-package rdfImporter.impl;
+package rdfImporter.impl.apiImpl;
 
 import javafx.beans.property.Property;
 import rdfImporter.ResourceImporter;
-import rdfImporter.Words;
+import util.Words;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;

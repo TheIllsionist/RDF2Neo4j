@@ -3,13 +3,11 @@ package test;
 import datasource.RdfProvider;
 import datasource.impl.FileRdfProvider;
 import org.apache.jena.ontology.OntClass;
-import rdfImporter.impl.CypherResourceImporter;
+import rdfImporter.impl.cypherImpl.CypherClassImporter;
+import rdfImporter.impl.cypherImpl.CypherResourceImporter;
 
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -22,7 +20,7 @@ public class FileRdfProviderTest {
         Set<OntClass> classes = rdfProvider.allOntClasses();
         Iterator<OntClass> classIterator = classes.iterator();
         while(classIterator.hasNext()){
-            importer.loadClassAsNode(classIterator.next());
+            importer.loadClassIn(classIterator.next());
         }
     }
 }

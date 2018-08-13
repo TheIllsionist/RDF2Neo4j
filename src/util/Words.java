@@ -1,4 +1,4 @@
-package rdfImporter;
+package util;
 
 public enum Words {
     OWL_CLASS,

@@ -46,18 +46,32 @@ public class Cypher{
     }
 
     /**
-     * 拼接查询多个Neo4j路径的Cypher语句
-     * @param paths
-     * @return this
+     * 拼接查询多个Neo4j结点的Cypher语句
+     * @param nodes
+     * @return
      */
-    public Cypher match(List<CypherPath> paths){
+    public Cypher match(List<CypherNode> nodes){
         cypher.append("match");
-        for(CypherPath path:paths){
-            cypher.append(path.toCypherStr() + ",");
+        for(CypherNode node : nodes){
+            cypher.append(node.toCypherStr() + ",");
         }
         cypher.delete(cypher.length() - 1,cypher.length());
         return this;
     }
+
+//    /**
+//     * 拼接查询多个Neo4j路径的Cypher语句
+//     * @param paths
+//     * @return this
+//     */
+//    public Cypher match(List<CypherPath> paths){
+//        cypher.append("match");
+//        for(CypherPath path:paths){
+//            cypher.append(path.toCypherStr() + ",");
+//        }
+//        cypher.delete(cypher.length() - 1,cypher.length());
+//        return this;
+//    }
 
     public Cypher create(String createClause){
         cypher.append("create" + createClause);
