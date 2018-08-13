@@ -12,7 +12,7 @@ import java.util.Set;
 @NotThreadSafe
 public class Cypher{
 
-    private static StringBuilder cypher = null;
+    private final StringBuilder cypher;
 
     public Cypher(){
         cypher = new StringBuilder();

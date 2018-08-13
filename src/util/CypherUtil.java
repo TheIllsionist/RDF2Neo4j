@@ -424,8 +424,64 @@ public class CypherUtil {
         return cypher.getCypher();
     }
 
-    public static String intoRelCypher(OntProperty prop1,OntProperty prop2,PROPERTY_REL rel){
-        return null;
+    /**
+     * 拼接将两个属性之间的某种关系写入Neo4j数据库的Cypher语句
+     * @param ontProp1 &nbsp 先序关系中的第1个属性
+     * @param ontProp2 &nbsp 先序关系中的第2个属性
+     * @param rel &nbsp 要写入的关系
+     * @return
+     * @throws Exception
+     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
+     */
+    public static String intoRelCypher(OntProperty ontProp1,OntProperty ontProp2,PROPERTY_REL rel) throws Exception{
+        boolean isObj = false;
+        if(ontProp1.hasProperty(RDF.type,OWL.ObjectProperty)){ //判断属性是对象属性还是数据类型属性
+            isObj = true;
+        }
+        Cypher cypher = new Cypher();
+        Set<PropValPair> props = new HashSet<>();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ontProp1.getURI()))));
+        CypherNode prop1 = new CypherNode("prop1",isObj ? "OWL_OBJECTPROPERTY" : "OWL_DATATYPEPROPERTY",props);
+        props.clear();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ontProp2.getURI()))));
+        CypherNode prop2 = new CypherNode("prop2",isObj ? "OWL_OBJECTPROPERTY" : "OWL_DATATYPEPROPERTY",props);
+        List<CypherNode> nodes = new ArrayList<>();
+        nodes.add(prop1);
+        nodes.add(prop2);
+        cypher.match(nodes);  //拼接查询两个属性的cypher语句
+        prop1.setLabel(null);
+        prop1.setProperties(null);
+        prop2.setLabel(null);
+        prop2.setProperties(null);
+        props.clear();
+        CypherRelationship relation = new CypherRightRelationship();
+        switch (rel){
+            case SUBPROPERTY_OF:{
+                relation.setType("RDFS_SUBPROPERTYOF");
+                props.add(new PropValPair(propUri,new CypherValue(RDFS.subPropertyOf.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(RDFS.subPropertyOf.getURI()))));
+            }break;
+            case EQUIVALENT_PROPERTY:{
+                relation.setType("EQUIVALENT_PROPERTY");
+                props.add(new PropValPair(propUri,new CypherValue(OWL2.equivalentProperty.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.equivalentProperty.getURI()))));
+            }break;
+            case DISJOINT_PROPERTY:{
+                relation.setType("DISJOINT_PROPERTY");
+                props.add(new PropValPair(propUri,new CypherValue(OWL2.propertyDisjointWith.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.propertyDisjointWith.getURI()))));
+            }break;
+            case INVERSE_OF:{
+                relation.setType("INVERSE_OF");
+                props.add(new PropValPair(propUri,new CypherValue(OWL2.inverseOf.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.inverseOf.getURI()))));
+            }break;
+        }
+        relation.setName("r");
+        relation.setProperties(props);
+        CypherPath path = new CypherPath(prop1).connectThrough(relation).with(prop2);
+        cypher.create(path).returnIdOf(relation);
+        return cypher.getCypher();
     }
 
     public static String intoRelCypher(Individual ins1,Individual ins2,INSTANCE_REL rel){

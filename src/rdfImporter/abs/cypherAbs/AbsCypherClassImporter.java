@@ -33,7 +33,7 @@ public abstract class AbsCypherClassImporter implements ClassImporter{
         //TODO:此时加载知识库中的内容到内存中是一个合适的时机吗?从性能上考虑
         static {  //类加载时即查询知识库中的已有类和已有关系
             StatementResult res = Neo4jConnection.getSession().run("match(cls:OWL_CLASS) " +
-                    "optional match(cls)-[r:RDFS_SUBCLASSOF|EQUIVALENT_CLASS|DISJOINT_CLASS]->(anCls:OWL_CLASS) " +
+                    "optional match(cls)-[r:RDFS_SUBCLASSOF|:EQUIVALENT_CLASS|:DISJOINT_CLASS]->(anCls:OWL_CLASS) " +
                     "return cls.preLabel as cls, case r.preLabel when \"rdfs:subClassOf\" then 1 when \"owl:equivalentClass\" then 2 " +
                     " when \"owl:disjointWith\" then 3 end as index,anCls.preLabel as anoCls");
             Record rec = null;

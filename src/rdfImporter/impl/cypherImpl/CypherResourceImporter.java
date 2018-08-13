@@ -8,6 +8,9 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
+import rdfImporter.ClassImporter;
+import rdfImporter.InsImporter;
+import rdfImporter.PropImporter;
 import rdfImporter.ResourceImporter;
 import util.CypherUtil;
 
@@ -18,8 +21,14 @@ import util.CypherUtil;
 @ThreadSafe
 public class CypherResourceImporter implements ResourceImporter{
 
-    public CypherResourceImporter(){
+    private final ClassImporter classImporter;
+    private final PropImporter propImporter;
+    private final InsImporter insImporter;
 
+    public CypherResourceImporter(ClassImporter classImporter,PropImporter propImporter,InsImporter insImporter){
+        this.classImporter = classImporter;
+        this.propImporter = propImporter;
+        this.insImporter = insImporter;
     }
 
     /**
@@ -44,7 +53,7 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public boolean loadClassIn(OntClass ontClass) throws Exception{
-        return CypherClassImporter.loadClassIn(ontClass);
+        return classImporter.loadClassIn(ontClass);
     }
 
     /**
@@ -56,7 +65,7 @@ public class CypherResourceImporter implements ResourceImporter{
      */
     @Override
     public boolean loadPropertyIn(OntProperty ontProperty) throws Exception{
-        return CypherPropImporter.loadPropertyIn(ontProperty);
+        return propImporter.loadPropertyIn(ontProperty);
     }
 
     @Override

@@ -107,6 +107,18 @@ public interface RdfProvider {
     Queue<Pair<OntClass,OntClass>> allSubClassOfRels();
 
     /**
+     * 得到该RDFModel中所有的有等价关系的类对
+     * @return
+     */
+    Queue<Pair<OntClass,OntClass>> allEqualClassRels();
+
+    /**
+     * 得到该RDFModel中所有的有不相交关系的类对
+     * @return
+     */
+    Queue<Pair<OntClass,OntClass>> allDisJointClassRels();
+
+    /**
      * 得到该RDFModel中所有的有父子关系的属性对,子属性在前,父属性在后
      * @return
      */

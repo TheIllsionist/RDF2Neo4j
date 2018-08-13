@@ -320,6 +320,24 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
+     * 返回此RDFModel中所有具有等价关系的类对
+     * @return &nbsp 包含所有类对的队列
+     */
+    @Override
+    public Queue<Pair<OntClass,OntClass>> allEqualClassRels(){
+        return relsBetweenClasses(CLASS_REL.EQUIVALENT_CLASS);
+    }
+
+    /**
+     * 返回此RDFModel中所有具有不相交关系的类对
+     * @return &nbsp 包含所有类对的队列
+     */
+    @Override
+    public Queue<Pair<OntClass,OntClass>> allDisJointClassRels(){
+        return relsBetweenClasses(CLASS_REL.DISJOINT_CLASS);
+    }
+
+    /**
      * 返回RDFModel中所有具有父子关系的父子属性对(子属性在前,父属性在后)
      * @return &nbsp 包含所有父子属性对的队列
      */
