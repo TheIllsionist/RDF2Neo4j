@@ -1,0 +1,17 @@
+Time:2018.08.13
+报错：
+    1.Exception in thread "Thread-4" Exception in thread "Thread-1" java.lang.ExceptionInInitializerError;
+    2.java.lang.NoClassDefFoundError: Could not initialize class rdfImporter.abs.cypherAbs.AbsCypherClassImporter$CacheClass
+解释：
+    1.类初始化阶段出错,也就是说是类加载阶段的初始化阶段中出错;
+    2.无法初始化内部类rdfImporter.abs.cypherAbs.AbsCypherClassImporter$CacheClass
+原因：
+    静态初始化块中(static{})的代码会在Java类加载阶段的初始化阶段执行,如果在执行静态初始化块中的代码时抛出了异常,比如java.lang.ArrayIndexOutOfBound
+或者java.lang.NullPointerException,JVM会抛出 java.lang.ExceptionInInitializerError异常.在抛出这个异常之后,程序员会得到一个
+java.lang.NoClassDefFoundError异常,这个异常的抛出根本原因还是在于java.lang.ExceptionInInitializerError,而java.lang.ExceptionInInitializerError
+又是因为静态代码块中的异常引起的,所以要解决这个问题,就必须解决掉那个在static代码块中报出的异常.
+    仔细查看堆栈报错,发现一条:
+    Caused by: org.neo4j.driver.v1.exceptions.value.Uncoercible: Cannot coerce NULL to Java int
+    发现是由于Neo4j API中的类型转换时遇到空值造成的
+解决方法：
+    因为程序是多线程的,所以首先要多线程调试,查出哪个线程是第一个进入该静态代码块的线程,然后纠正类型转换时遇到空的错误即可
