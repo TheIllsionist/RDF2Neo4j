@@ -15,13 +15,18 @@ public abstract class AbsCypherPropImporter implements PropImporter {
      * 属性及其关系缓存
      * 在知识库中属性的数目是有限的,因此属性缓存缓存全部的属性及其之间的关系
      * 属性之间主要有四种关系：subPropertyOf,equivalentProperty,disjointProperty,inverseOf
-     * 只有一个线程写属性,多个线程读属性
-     * 多个线程读关系,多个线程写关系,但每个线程所写关系种类不同,一个线程只写某个特定类别的关系
+     * 当前缓存基于：{ 实例封闭 + 将线程安全性委托给现有线程安全类 + 特殊的线程读写方式 } 实现线程安全性
+     * 只有一个线程写属性缓存,多个线程读属性缓存
+     * 多个线程读/写关系,但每个线程所写关系的种类不同,一个线程只写某种特定的关系,每种特定的关系也只有一个线程写
      * 在缓存中用一个整型变量表征两个属性之间的关系：1-subPropertyOf,2-equivalentProperty,3-disjointProperty,4-inverseOf
+     * 两个属性间的4种关系是互斥存在的,即假如属性A是属性B的子属性,则属性A与属性B之间不会再有其他关系
      */
     protected static class CacheProperty{
-        /** 利用静态初始化器保证对象引用的可见性,当前实现为只缓存preLabel字符串 **/
-        private static ConcurrentHashMap<String,ConcurrentHashMap<String,Integer>> propWithRels = new ConcurrentHashMap<>();
+
+        private final static int DEFAULT_CAPACITY = 5460;  //TODO:默认初始容量的选择还有待调研
+
+        /** 利用静态初始化器保证对象引用的可见性,当前实现为只缓存每个属性的preLabel,当前初始容量默认为5460 **/
+        private final static ConcurrentHashMap<String,ConcurrentHashMap<String,Integer>> propWithRels = new ConcurrentHashMap<>(84);
 
         //TODO:此时加载知识库中的内容到内存中是一个合适的时机吗?从性能上考虑
         static {  //类加载时即查询知识库中已有的属性
@@ -36,13 +41,13 @@ public abstract class AbsCypherPropImporter implements PropImporter {
             while (res.hasNext()){
                 rec = res.next();
                 String proPre = rec.get(0).asString();
-                if(proPre == null)  //防止第1个参数为空的意外情况出现
+                if(proPre == null||proPre.equals("null"))  //防止第1个参数为空的意外情况出现
                     continue;
-                if(!propWithRels.contains(proPre)){  //保证了第1个键的值不会被延迟初始化,避免"先检查后执行"竞态条件发生
+                if(!propWithRels.containsKey(proPre)){  //保证了第1个键的值不会被延迟初始化,避免"先检查后执行"竞态条件发生
                     propWithRels.put(proPre,new ConcurrentHashMap<>());
                 }
                 String anoProPre = rec.get(2).asString();
-                if(anoProPre == null)
+                if(anoProPre == null||anoProPre.equals("null"))
                     continue;
                 propWithRels.get(proPre).put(anoProPre,rec.get(1).asInt());
             }

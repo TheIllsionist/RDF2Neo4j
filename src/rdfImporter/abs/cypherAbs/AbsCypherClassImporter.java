@@ -37,17 +37,18 @@ public abstract class AbsCypherClassImporter implements ClassImporter{
                     "return cls.preLabel as cls, case r.preLabel when \"rdfs:subClassOf\" then 1 when \"owl:equivalentClass\" then 2 " +
                     " when \"owl:disjointWith\" then 3 end as index,anCls.preLabel as anoCls");
             Record rec = null;
+            int count = 0;
             while (res.hasNext()){
                 rec = res.next();
                 String clsPre = rec.get(0).asString();
-                if(clsPre == null){  //防止第1个参数为空的意外情况出现
+                if(clsPre == null || clsPre.equals("null")){  //防止第1个参数为空的意外情况出现
                     continue;
                 }
-                if(!classWithRels.contains(clsPre)){  //保证了第1个键的值不会被延迟初始化,避免"先检查后执行"竞态条件发生
+                if(!classWithRels.containsKey(clsPre)){  //保证了第1个键的值不会被延迟初始化,避免"先检查后执行"竞态条件发生
                     classWithRels.put(clsPre,new ConcurrentHashMap<>());
                 }
                 String anoClsPre = rec.get(2).asString();
-                if(anoClsPre == null)
+                if(anoClsPre == null || anoClsPre.equals("null"))
                     continue;
                 classWithRels.get(clsPre).put(anoClsPre,rec.get(1).asInt());
             }
