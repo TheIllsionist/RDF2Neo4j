@@ -347,6 +347,33 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
+     * 返回RDFModel中所有具有等价关系的属性对
+     * @return
+     */
+    @Override
+    public Queue<Pair<OntProperty,OntProperty>> allEqualPropertyRels(){
+        return relsBetweenProperties(PROPERTY_REL.EQUIVALENT_PROPERTY);
+    }
+
+    /**
+     * 返回RDFModel中所有具有不相交关系的属性对
+     * @return
+     */
+    @Override
+    public Queue<Pair<OntProperty,OntProperty>> allDisjointPropRels(){
+        return relsBetweenProperties(PROPERTY_REL.DISJOINT_PROPERTY);
+    }
+
+    /**
+     * 返回RDFModel中所有具有语义相反关系的属性对
+     * @return
+     */
+    @Override
+    public Queue<Pair<OntProperty,OntProperty>> allInversePropRels(){
+        return relsBetweenProperties(PROPERTY_REL.INVERSE_OF);
+    }
+
+    /**
      * 返回所有的rdfs:domain关系的主宾对
      * 该方法能起到实际作用的前提是推理机设置了某个属性的定义域是几个类别的并集
      * @return

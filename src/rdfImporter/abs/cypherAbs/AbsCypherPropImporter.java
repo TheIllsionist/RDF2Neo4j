@@ -1,5 +1,6 @@
 package rdfImporter.abs.cypherAbs;
 
+import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
@@ -21,6 +22,7 @@ public abstract class AbsCypherPropImporter implements PropImporter {
      * 在缓存中用一个整型变量表征两个属性之间的关系：1-subPropertyOf,2-equivalentProperty,3-disjointProperty,4-inverseOf
      * 两个属性间的4种关系是互斥存在的,即假如属性A是属性B的子属性,则属性A与属性B之间不会再有其他关系
      */
+    @ThreadSafe //只有在特定的使用该缓存的方式下才满足线程安全性
     protected static class CacheProperty{
 
         private final static int DEFAULT_CAPACITY = 5460;  //TODO:默认初始容量的选择还有待调研
@@ -30,13 +32,13 @@ public abstract class AbsCypherPropImporter implements PropImporter {
 
         //TODO:此时加载知识库中的内容到内存中是一个合适的时机吗?从性能上考虑
         static {  //类加载时即查询知识库中已有的属性
-            StatementResult res = Neo4jConnection.getSession().run("match(pro:OWL_DATATYPEPROPERTY)" +
-                    " optional match(p)-[r:RDFS_SUBPROPERTYOF|:EQUIVALENT_PROPERTY|:DISJOINT_PROPERTY|:INVERSE_OF]->(anop:OWL_DATATYPEPROPERTY) " +
+            StatementResult res = Neo4jConnection.getSession().run("match(p:OWL_DATATYPEPROPERTY)" +
+                    " optional match(p)-[r:RDFS_SUBPROPERTYOF|:EQUIVALENT_PROPERTY|:DISJOINT_PROPERTY|:INVERSE_PROPERTY]->(anop:OWL_DATATYPEPROPERTY) " +
                     "return p.preLabel as p,case r.preLabel when \"rdfs:subPropertyOf\" then 1 when \"owl:equivalentProperty\" then 2 " +
-                    "when \"owl:disjointProperty\" then 3 when \"owl:inverseOf\" then 4 end as index,anop.preLabel as anop union " +
-                    "match(pro:OWL_OBJECTPROPERTY) optional match(p)-[r:RDFS_SUBPROPERTYOF|:EQUIVALENT_PROPERTY|:DISJOINT_PROPERTY|:INVERSE_OF]->(anop:OWL_OBJECTPROPERTY) " +
+                    "when \"owl:propertyDisjointWith\" then 3 when \"owl:inverseOf\" then 4 end as tag,anop.preLabel as anop union " +
+                    "match(p:OWL_OBJECTPROPERTY) optional match(p)-[r:RDFS_SUBPROPERTYOF|:EQUIVALENT_PROPERTY|:DISJOINT_PROPERTY|:INVERSE_PROPERTY]->(anop:OWL_OBJECTPROPERTY) " +
                     "return p.preLabel as p,case r.preLabel when \"rdfs:subPropertyOf\" then 1 when \"owl:equivalentProperty\" then 2 " +
-                    "when \"owl:disjointProperty\" then 3 when \"owl:inverseOf\" then 4 end as index,anop.preLabel as anop ");
+                    "when \"owl:propertyDisjointWith\" then 3 when \"owl:inverseOf\" then 4 end as tag,anop.preLabel as anop ");
             Record rec = null;
             while (res.hasNext()){
                 rec = res.next();

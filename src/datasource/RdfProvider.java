@@ -125,6 +125,24 @@ public interface RdfProvider {
     Queue<Pair<OntProperty,OntProperty>> allSubPropertyOfRels();
 
     /**
+     * 得到该RDFModel中所有具有等价关系的属性对
+     * @return
+     */
+    Queue<Pair<OntProperty,OntProperty>> allEqualPropertyRels();
+
+    /**
+     * 得到该RDFModel中所有具有不相交关系的属性对
+     * @return
+     */
+    public Queue<Pair<OntProperty,OntProperty>> allDisjointPropRels();
+
+    /**
+     * 得到该RDFModel中所有具有相反语义关系的属性对
+     * @return
+     */
+    public Queue<Pair<OntProperty,OntProperty>> allInversePropRels();
+
+    /**
      * 得到该RDFModel中所有的rdfs:range关系,返回拥有该关系的主宾对
      * @return
      */

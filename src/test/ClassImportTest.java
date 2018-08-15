@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Created by The Illsionist on 2018/7/1.
  */
-public class FileRdfProviderTest {
+public class ClassImportTest {
     public static void main(String args[]) throws Exception {
         RdfProvider rdfProvider = new FileRdfProvider("G:\\");
         ClassImporter importer = new CypherClassImporter();

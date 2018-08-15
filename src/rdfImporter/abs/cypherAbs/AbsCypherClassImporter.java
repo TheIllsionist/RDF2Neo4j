@@ -35,9 +35,8 @@ public abstract class AbsCypherClassImporter implements ClassImporter{
             StatementResult res = Neo4jConnection.getSession().run("match(cls:OWL_CLASS) " +
                     "optional match(cls)-[r:RDFS_SUBCLASSOF|:EQUIVALENT_CLASS|:DISJOINT_CLASS]->(anCls:OWL_CLASS) " +
                     "return cls.preLabel as cls, case r.preLabel when \"rdfs:subClassOf\" then 1 when \"owl:equivalentClass\" then 2 " +
-                    " when \"owl:disjointWith\" then 3 end as index,anCls.preLabel as anoCls");
+                    " when \"owl:disjointWith\" then 3 end as tag,anCls.preLabel as anoCls");
             Record rec = null;
-            int count = 0;
             while (res.hasNext()){
                 rec = res.next();
                 String clsPre = rec.get(0).asString();

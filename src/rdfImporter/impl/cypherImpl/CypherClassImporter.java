@@ -11,12 +11,18 @@ import util.CLASS_REL;
 import util.CypherUtil;
 
 public class CypherClassImporter extends AbsCypherClassImporter {
-
+    /**
+     * 将本体类导入Neo4j数据库
+     * 只有一个线程将类写入知识库和类缓存,所以虽然在该方法中存在“先检查-后执行”竞态条件,但这并不影响线程安全性
+     * @param ontClass
+     * @return
+     * @throws Exception
+     */
     public boolean loadClassIn(OntClass ontClass) throws Exception{
         if(!CacheClass.isClassContained(CypherUtil.getPreLabel(ontClass.getURI()))){ //当前数据库中不存在该类
             try{
-                String cypher = CypherUtil.intoClsCypher(ontClass);
-                Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() {
+                String cypher = CypherUtil.intoClsCypher(ontClass);  //拼接Cypher语句,可能属于耗时操作
+                Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                     @Override
                     public Integer execute(Transaction transaction) {
                         StatementResult mRst = transaction.run(cypher);
@@ -33,6 +39,15 @@ public class CypherClassImporter extends AbsCypherClassImporter {
         return true;  //TODO:目前先实现返回true
     }
 
+    /**
+     * 将两个本体类之间的关系导入Neo4j数据库
+     * 因为两个类之间只可能有一种关系,所以虽然在该方法中存在“先检查-后执行”竞态条件,但这并不影响线程安全性
+     * @param class1
+     * @param class2
+     * @param rel
+     * @return
+     * @throws Exception
+     */
     public boolean loadClassRelIn(OntClass class1, OntClass class2, CLASS_REL rel) throws Exception {
         String fPre = CypherUtil.getPreLabel(class1.getURI());
         String lPre = CypherUtil.getPreLabel(class2.getURI());
@@ -41,8 +56,8 @@ public class CypherClassImporter extends AbsCypherClassImporter {
             return false;
         //如果关系不存在,则写知识库然后写缓存
         if(!CacheClass.isRelExisted(fPre,lPre)){
-            String cypher = CypherUtil.intoRelCypher(class1,class2,rel);
-            Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() {
+            String cypher = CypherUtil.intoRelCypher(class1,class2,rel);  //拼接Cypher语句,可能是耗时操作
+            Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                 @Override
                 public Integer execute(Transaction transaction) {
                     StatementResult mRst = transaction.run(cypher);

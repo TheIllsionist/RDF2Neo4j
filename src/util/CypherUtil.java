@@ -266,26 +266,26 @@ public class CypherUtil {
      */
     public static String intoPropCypher(OntProperty ontProperty) throws Exception{
         Cypher cypher = new Cypher();
-        CypherNode prop = new CypherNode("prop");
+        CypherNode prop = new CypherNode("prop");  //代表属性的结点
         Set<CypherCondition> propProps = new HashSet<>();
         List<CypherPath> pathes = new LinkedList<>();
-        if(ontProperty.hasProperty(RDF.type,OWL.DatatypeProperty)){
+        if(ontProperty.hasProperty(RDF.type,OWL.DatatypeProperty)){  //当前属性是数据类型属性
             propProps.add(new LabelCondition(prop,"OWL_DATATYPEPROPERTY"));
             cypher.match(dpWord);
             pathes.add(new CypherPath(prop).connectThrough(isA).with(new CypherNode("dpWord")));
-        }else{
+        }else{                     //当前属性是对象属性
             propProps.add(new LabelCondition(prop,"OWL_OBJECTPROPERTY"));
             cypher.match(opWord);
             pathes.add(new CypherPath(prop).connectThrough(isA).with(new CypherNode("opWord")));
         }
-        CypherNode node = new CypherNode(null,new HashSet<>());
-        Iterator<RDFNode> labelNodes = ontProperty.listLabels(null);
+        CypherNode node = new CypherNode(null,new HashSet<>());  //用到的中间结点
+        Iterator<RDFNode> labelNodes = ontProperty.listLabels(null);  //列出该属性的所有rdfsLabel
         while(labelNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(labelNodes.next().toString())));
-            pathes.add(new CypherPath(prop).connectThrough(rdfsLabel).with(node));  //给结点加一个rdfs:label
+            pathes.add(new CypherPath(prop).connectThrough(rdfsLabel).with(node));   //给结点加一个rdfs:label
             node.getProperties().clear();
         }
-        Iterator<RDFNode> commentNodes = ontProperty.listComments(null);
+        Iterator<RDFNode> commentNodes = ontProperty.listComments(null);  //列出该属性的所有rdfsComment
         while(commentNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(commentNodes.next().toString())));
             pathes.add(new CypherPath(prop).connectThrough(rdfsComment).with(node)); //给结点加一个rdfs:comment
@@ -472,7 +472,7 @@ public class CypherUtil {
                 props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.propertyDisjointWith.getURI()))));
             }break;
             case INVERSE_OF:{
-                relation.setType("INVERSE_OF");
+                relation.setType("INVERSE_PROPERTY");
                 props.add(new PropValPair(propUri,new CypherValue(OWL2.inverseOf.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.inverseOf.getURI()))));
             }break;
