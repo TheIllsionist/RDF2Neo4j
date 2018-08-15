@@ -19,7 +19,7 @@ public class CypherClassImporter extends AbsCypherClassImporter {
      * @throws Exception
      */
     public boolean loadClassIn(OntClass ontClass) throws Exception{
-        if(!CacheClass.isClassContained(CypherUtil.getPreLabel(ontClass.getURI()))){ //当前数据库中不存在该类
+        if(!CacheClass.classContained(CypherUtil.getPreLabel(ontClass.getURI()))){ //当前数据库中不存在该类
             try{
                 String cypher = CypherUtil.intoClsCypher(ontClass);  //拼接Cypher语句,可能属于耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
@@ -52,10 +52,10 @@ public class CypherClassImporter extends AbsCypherClassImporter {
         String fPre = CypherUtil.getPreLabel(class1.getURI());
         String lPre = CypherUtil.getPreLabel(class2.getURI());
         //写关系的两个类必须要先存在与知识库中
-        if(!CacheClass.isClassContained(fPre) || !CacheClass.isClassContained(lPre))
+        if(!CacheClass.classContained(fPre) || !CacheClass.classContained(lPre))
             return false;
         //如果关系不存在,则写知识库然后写缓存
-        if(!CacheClass.isRelExisted(fPre,lPre)){
+        if(!CacheClass.relExisted(fPre,lPre)){
             String cypher = CypherUtil.intoRelCypher(class1,class2,rel);  //拼接Cypher语句,可能是耗时操作
             Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                 @Override

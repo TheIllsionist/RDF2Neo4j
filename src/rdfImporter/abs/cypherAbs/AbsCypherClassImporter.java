@@ -59,7 +59,7 @@ public abstract class AbsCypherClassImporter implements ClassImporter{
          * @return true表示该类已存在于知识库中,false表示该类未存在于知识库中
          * 注:因写知识库和写缓存不在一个原子操作内,所以可能出现误判,但程序实现逻辑容忍误判
          */
-        public static boolean isClassContained(String preLabel){
+        public static boolean classContained(String preLabel){
             return classWithRels.containsKey(preLabel);
         }
 
@@ -79,7 +79,7 @@ public abstract class AbsCypherClassImporter implements ClassImporter{
          * @return true 如果两个类之间的关系已被写入知识库
          * 注:此方法调用前必须先调用两次isClassContained方法并确定两个类都已存在在知识库中
          */
-        public static boolean isRelExisted(String fPre,String lPre){
+        public static boolean relExisted(String fPre,String lPre){
             return classWithRels.get(fPre).get(lPre) != null;
         }
 
