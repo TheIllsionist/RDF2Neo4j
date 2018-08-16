@@ -1,14 +1,12 @@
 package util;
 import cypherelement.basic.*;
 import cypherelement.clause.Cypher;
-import org.apache.jena.ontology.Individual;
-import org.apache.jena.ontology.ObjectProperty;
-import org.apache.jena.ontology.OntClass;
-import org.apache.jena.ontology.OntProperty;
+import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -153,17 +151,18 @@ public class CypherUtil {
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.subClassOf.getURI()))));
             }break;
             case EQUIVALENT_CLASS:{
-                rel.setType("OWL_EQUIVALENTCLASS");
+                rel.setType("EQUIVALENT_CLASS");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.equivalentClass.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.equivalentClass.getURI()))));
             }break;
             case DISJOINT_CLASS:{
-                rel.setType("OWL_DISJOINTCLASS");
+                rel.setType("DISJOINT_CLASS");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.disjointWith.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.disjointWith.getURI()))));
             }break;
         }
         rel.setProperties(props);
+        rel.setName("r");  //TODO:这里可以加上名字?
         return rel;
     }
     private static CypherRelationship getWordCypherRelation(PROPERTY_REL proRel){
@@ -176,22 +175,23 @@ public class CypherUtil {
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.subPropertyOf.getURI()))));
             }break;
             case EQUIVALENT_PROPERTY:{
-                rel.setType("OWL_EQUIVALENTPROPERTY");
+                rel.setType("EQUIVALENT_PROPERTY");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.equivalentProperty.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.equivalentProperty.getURI()))));
             }break;
             case INVERSE_OF:{
-                rel.setType("OWL_INVERSEOF");
+                rel.setType("INVERSE_PROPERTY");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.inverseOf.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.inverseOf.getURI()))));
             }break;
             case DISJOINT_PROPERTY:{
-                rel.setType("OWL_DISJOINTPROPERTY");
+                rel.setType("DISJOINT_PROPERTY");
                 props.add(new PropValPair(propUri,new CypherValue(OWL2.propertyDisjointWith.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL2.propertyDisjointWith.getURI()))));
             }break;
         }
         rel.setProperties(props);
+        rel.setName("r");  //TODO:这里可以加上名字?
         return rel;
     }
     private static CypherRelationship getWordCypherRelation(INSTANCE_REL insRel){
@@ -199,17 +199,18 @@ public class CypherUtil {
         Set<PropValPair> props = new HashSet<>();
         switch (insRel){
             case SAME_AS:{
-                rel.setType("OWL_SAMEAS");
+                rel.setType("SAME_INDIVIDUAL");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.sameAs.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.sameAs.getURI()))));
             }break;
             case DIFFERENT_FROM:{
-                rel.setType("OWL_DIFFERENTFROM");
+                rel.setType("DIFFERENT_INDIVIDUAL");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.differentFrom.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.differentFrom.getURI()))));
             }break;
         }
         rel.setProperties(props);
+        rel.setName("r");  //TODO:这里可以加上名字?
         return rel;
     }
 
@@ -266,11 +267,15 @@ public class CypherUtil {
      * TODO:需要加上该Property的Domain和Range
      */
     public static String intoPropCypher(OntProperty ontProperty) throws Exception{
+        boolean isObj = false;    //该属性是否是对象属性的标志
+        if(ontProperty.hasProperty(RDF.type,OWL.ObjectProperty)){
+            isObj = true;
+        }
         Cypher cypher = new Cypher();
         CypherNode prop = new CypherNode("prop");  //代表属性的结点
         Set<CypherCondition> propProps = new HashSet<>();
         List<CypherPath> pathes = new LinkedList<>();
-        if(ontProperty.hasProperty(RDF.type,OWL.DatatypeProperty)){  //当前属性是数据类型属性
+        if(!isObj){  //当前属性是数据类型属性
             propProps.add(new LabelCondition(prop,"OWL_DATATYPEPROPERTY"));
             cypher.match(dpWord);
             pathes.add(new CypherPath(prop).connectThrough(isA).with(new CypherNode("dpWord")));
@@ -291,6 +296,34 @@ public class CypherUtil {
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(commentNodes.next().toString())));
             pathes.add(new CypherPath(prop).connectThrough(rdfsComment).with(node)); //给结点加一个rdfs:comment
             node.getProperties().clear();
+        }
+        if(isObj){  //当前属性是对象属性,则需要将它的Domain和Range添加进来,TODO:数据类型属性的Domain和Range暂时不管
+            int dC = 0;  //记录该属性domain的数目
+            int rC = 0;  //记录该属性range的数目
+            ExtendedIterator<OntClass> domains = (ExtendedIterator<OntClass>) ontProperty.listDomain();
+            ExtendedIterator<OntClass> ranges = (ExtendedIterator<OntClass>) ontProperty.listRange();
+            node.setLabel("OWL_CLASS");
+            while(domains.hasNext()){   //查询各个domain
+                node.setName("d" + dC++);
+                node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(domains.next().getURI()))));
+                cypher.match(node);
+                node.getProperties().clear();  //把临时node的preLabel条件去掉
+            }
+            while(ranges.hasNext()){   //查询各个range
+                node.setName("r" + rC++);
+                node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ranges.next().getURI()))));
+                cypher.match(node);
+                node.getProperties().clear();  //把临时node的preLabel条件去掉
+            }
+            node.setLabel(null);
+            while(dC > 0){
+                node.setName("d" + --dC);
+                pathes.add(new CypherPath(prop).connectThrough(rdfsDomain).with(node));  //给结点加一个domain
+            }
+            while(rC > 0){
+                node.setName("r" + --rC);
+                pathes.add(new CypherPath(prop).connectThrough(rdfsRange).with(node));   //给结点加一个range
+            }
         }
         propProps.add(new PropValPair(new CypherProperty("uri",prop),Operator.EQ_TO,new CypherValue(ontProperty.getURI())));
         propProps.add(new PropValPair(new CypherProperty("preLabel",prop),Operator.EQ_TO,new CypherValue(getPreLabel(ontProperty.getURI()))));
@@ -368,6 +401,21 @@ public class CypherUtil {
                 dpVals.clear();
                 node.getProperties().clear();
             }
+        }
+        //处理实例所属的类
+        int cC = 0;
+        ExtendedIterator<OntClass> clses = individual.listOntClasses(true);  //这里列出了实例直接所属的类
+        node.setLabel("OWL_CLASS");
+        while(clses.hasNext()){
+            node.setName("c" + cC++);
+            node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(clses.next().getURI()))));
+            cypher.match(node);
+            node.getProperties().clear();
+        }
+        node.setLabel(null);
+        while(cC > 0){
+            node.setName("c" + --cC);
+            pathes.add(new CypherPath(ins).connectThrough(isA).with(node));  //给结点加一个rdf:type
         }
         insProps.add(new PropValPair(new CypherProperty("uri",ins),Operator.EQ_TO,new CypherValue(individual.getURI())));
         insProps.add(new PropValPair(new CypherProperty("preLabel",ins),Operator.EQ_TO,new CypherValue(getPreLabel(individual.getURI()))));
@@ -456,31 +504,22 @@ public class CypherUtil {
         prop2.setLabel(null);
         prop2.setProperties(null);
         props.clear();
-        CypherRelationship relation = new CypherRightRelationship();
+        CypherPath path = null;
         switch (rel){
             case SUBPROPERTY_OF:{
-                relation.setType("RDFS_SUBPROPERTYOF");
-                props.add(new PropValPair(propUri,new CypherValue(RDFS.subPropertyOf.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(RDFS.subPropertyOf.getURI()))));
+                path = new CypherPath(prop1).connectThrough(subPropertyOf).with(prop2);
             }break;
             case EQUIVALENT_PROPERTY:{
-                relation.setType("EQUIVALENT_PROPERTY");
-                props.add(new PropValPair(propUri,new CypherValue(OWL2.equivalentProperty.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.equivalentProperty.getURI()))));
+                path = new CypherPath(prop1).connectThrough().with(prop2);
             }break;
             case DISJOINT_PROPERTY:{
-                relation.setType("DISJOINT_PROPERTY");
-                props.add(new PropValPair(propUri,new CypherValue(OWL2.propertyDisjointWith.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.propertyDisjointWith.getURI()))));
+
             }break;
             case INVERSE_OF:{
-                relation.setType("INVERSE_PROPERTY");
-                props.add(new PropValPair(propUri,new CypherValue(OWL2.inverseOf.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.inverseOf.getURI()))));
+
             }break;
         }
-        relation.setName("r");
-        relation.setProperties(props);
+
         CypherPath path = new CypherPath(prop1).connectThrough(relation).with(prop2);
         cypher.create(path).returnIdOf(relation);
         return cypher.getCypher();
