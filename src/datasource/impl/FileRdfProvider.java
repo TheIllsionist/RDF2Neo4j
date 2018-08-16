@@ -338,6 +338,18 @@ public class FileRdfProvider implements RdfProvider {
     }
 
     /**
+     * 返回类之间的所有关系
+     * TODO:当前实现方式比较慢,后面换成直接从OntModel中迭代出所有的类间关系
+     * @return
+     */
+    public Queue<Pair<OntClass,OntClass>> allClassRels(){
+        Queue<Pair<OntClass,OntClass>> rels = new LinkedList<>(allSubClassOfRels());
+        rels.addAll(allEqualClassRels());
+        rels.addAll(allDisJointClassRels());
+        return rels;
+    }
+
+    /**
      * 返回RDFModel中所有具有父子关系的父子属性对(子属性在前,父属性在后)
      * @return &nbsp 包含所有父子属性对的队列
      */

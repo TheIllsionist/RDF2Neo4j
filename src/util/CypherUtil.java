@@ -263,6 +263,7 @@ public class CypherUtil {
      * @return 将该属性按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
      * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
+     * TODO:需要加上该Property的Domain和Range
      */
     public static String intoPropCypher(OntProperty ontProperty) throws Exception{
         Cypher cypher = new Cypher();
@@ -303,6 +304,7 @@ public class CypherUtil {
      * @return 将该实例按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
      * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
+     * TODO:需要加入该实例所属的所有的类之间的rdf:type关系
      */
     public static String intoInsCypher(Individual individual) throws Exception{
         Cypher cypher = new Cypher();  //cypher拼接对象

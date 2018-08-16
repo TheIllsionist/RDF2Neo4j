@@ -6,11 +6,12 @@ import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
-import rdfImporter.abs.cypherAbs.AbsCypherPropImporter;
+import rdfImporter.PropImporter;
+import rdfImporter.cache.PropertyCache;
 import util.CypherUtil;
 import util.PROPERTY_REL;
 
-public class CypherPropImporter extends AbsCypherPropImporter {
+public class CypherPropImporter implements PropImporter {
     /**
      * 将本体属性导入Neo4j数据库
      * 只有一个线程将属性写入知识库和属性缓存,所以虽然在该方法中存在“先检查-后执行”竞态条件,但这并不影响线程安全性
@@ -19,7 +20,8 @@ public class CypherPropImporter extends AbsCypherPropImporter {
      * @throws Exception
      */
     public boolean loadPropertyIn(OntProperty ontProperty) throws Exception{
-        if(!CacheProperty.isPropertyContained(CypherUtil.getPreLabel(ontProperty.getURI()))){ //当前数据库中不存在该属性
+        String preLabel = CypherUtil.getPreLabel(ontProperty.getURI());
+        if(!PropertyCache.isPropertyContained(preLabel)){ //当前数据库中不存在该属性
             try {
                 String cypher = CypherUtil.intoPropCypher(ontProperty); //拼接Cypher语句,可能是耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
@@ -29,12 +31,12 @@ public class CypherPropImporter extends AbsCypherPropImporter {
                         return mRst.single().get(0).asInt();
                     }
                 });
+                PropertyCache.addProperty(preLabel); //写缓存
             }catch (NoSuchRecordException nRec){
                 System.out.println("Import failure of property: " + CypherUtil.getPreLabel(ontProperty.getURI()) +
                         ". Maybe because of lack of initialization.");
                 throw nRec;
             }
-            CacheProperty.addProperty(CypherUtil.getPreLabel(ontProperty.getURI())); //写缓存
         }
         return true;
     }
@@ -53,10 +55,10 @@ public class CypherPropImporter extends AbsCypherPropImporter {
         String fPre = CypherUtil.getPreLabel(prop1.getURI());
         String lPre = CypherUtil.getPreLabel(prop2.getURI());
         //写关系的两个属性必须要先存在于知识库中
-        if(!CacheProperty.isPropertyContained(fPre) || !CacheProperty.isPropertyContained(lPre))
+        if(!PropertyCache.isPropertyContained(fPre) || !PropertyCache.isPropertyContained(lPre))
             return false;
         //如果关系不存在,则写知识库然后写缓存
-        if(!CacheProperty.isRelExisted(fPre,lPre)){
+        if(!PropertyCache.isRelExisted(fPre,lPre)){
             String cypher = CypherUtil.intoRelCypher(prop1,prop2,rel);  //拼接Cypher语句,耗时操作
             Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                 @Override
@@ -72,7 +74,7 @@ public class CypherPropImporter extends AbsCypherPropImporter {
                 case DISJOINT_PROPERTY : tag = 3;break;
                 case INVERSE_OF : tag = 4;break;
             }
-            CacheProperty.addRelation(fPre,lPre,tag); //写缓存
+            PropertyCache.addRelation(fPre,lPre,tag); //写缓存
         }
         //无论是已经存在还是已经写入,返回true
         return true;
