@@ -11,46 +11,67 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-
 import java.security.InvalidParameterException;
 import java.util.*;
+import static util.CLASS_REL.*;
+import static util.INSTANCE_REL.*;
+import static util.PROPERTY_REL.*;
 
 /**
  * Created by The Illsionist on 2018/8/8.
  */
 public class CypherUtil {
 
-    private static final HashMap<String,String> nsMap;   //记录命名空间全称与前缀的对应
-    private static final CypherProperty propUri;  //所有资源都有的uri属性
-    private static final CypherProperty propPreLabel;  //所有资源都有的preLabel属性
-    private static final CypherNode clsWord;  //导入类时用到的类定义词汇
-    private static final CypherNode dpWord;   //导入数据类型属性时用到的数据类型属性定义词汇
-    private static final CypherNode opWord;   //导入对象属性时用到的对象属性定义词汇
-    private static final CypherNode insWord;  //导入实例时用到的实例定义词汇
+    private static final HashMap<String,String> nsMap;
+    private static final CypherProperty propUri;
+    private static final CypherProperty propPreLabel;
+    private static final CypherNode clsWord;
+    private static final CypherNode dpWord;
+    private static final CypherNode opWord;
+    private static final CypherNode insWord;
     private static final CypherRelationship isA;
     private static final CypherRelationship rdfsLabel;
     private static final CypherRelationship rdfsComment;
     private static final CypherRelationship subClassOf;
+    private static final CypherRelationship equalClass;
+    private static final CypherRelationship disjointClass;
     private static final CypherRelationship subPropertyOf;
+    private static final CypherRelationship equalProperty;
+    private static final CypherRelationship disjointProperty;
+    private static final CypherRelationship inverseProperty;
     private static final CypherRelationship rdfsRange;
     private static final CypherRelationship rdfsDomain;
+    private static final CypherRelationship sameIns;
+    private static final CypherRelationship differentIns;
 
     static {  //静态初始化函数和final关键字都保证了初始化时状态和引用的可见性
         nsMap = new HashMap<>();
         fillNsMap();
         propUri = new CypherProperty("uri");
         propPreLabel = new CypherProperty("preLabel");
+
         clsWord = getWordCypherNode(Words.OWL_CLASS);
         dpWord = getWordCypherNode(Words.OWL_DATATYPEPROPERTY);
         opWord = getWordCypherNode(Words.OWL_OBJECTPROPERTY);
         insWord = getWordCypherNode(Words.OWL_NAMEDINDIVIDUAL);
+
         isA = getWordCypherRelation("ISA");
         rdfsLabel = getWordCypherRelation("RDFS_LABEL");
         rdfsComment = getWordCypherRelation("RDFS_COMMENT");
-        subClassOf = getWordCypherRelation(CLASS_REL.SUBCLASS_OF);
-        subPropertyOf = getWordCypherRelation(PROPERTY_REL.SUBPROPERTY_OF);
         rdfsRange = getWordCypherRelation("RANGE");
         rdfsDomain = getWordCypherRelation("DOMAIN");
+
+        subClassOf = getWordCypherRelation(SUBCLASS_OF);
+        equalClass = getWordCypherRelation(EQUIVALENT_CLASS);
+        disjointClass = getWordCypherRelation(DISJOINT_CLASS);
+
+        subPropertyOf = getWordCypherRelation(SUBPROPERTY_OF);
+        equalProperty = getWordCypherRelation(EQUIVALENT_PROPERTY);
+        disjointProperty = getWordCypherRelation(DISJOINT_PROPERTY);
+        inverseProperty = getWordCypherRelation(INVERSE_OF);
+
+        sameIns = getWordCypherRelation(SAME_AS);
+        differentIns = getWordCypherRelation(INSTANCE_REL.DIFFERENT_FROM);
     }
     /**
      * 将命名空间全称和前缀以及前缀和全称的对应加入nsMap
@@ -449,26 +470,18 @@ public class CypherUtil {
         cls2.setLabel(null);
         cls2.setProperties(null);
         props.clear();
-        CypherRelationship relation = new CypherRightRelationship();
+        CypherRelationship relation = null;
         switch (rel){
             case SUBCLASS_OF:{
-                relation.setType("RDFS_SUBCLASSOF");
-                props.add(new PropValPair(propUri,new CypherValue(RDFS.subClassOf.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(RDFS.subClassOf.getURI()))));
+                relation = subClassOf;
             }break;
             case EQUIVALENT_CLASS:{
-                relation.setType("EQUIVALENT_CLASS");
-                props.add(new PropValPair(propUri,new CypherValue(OWL2.equivalentClass.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.equivalentClass.getURI()))));
+                relation = equalClass;
             }break;
             case DISJOINT_CLASS:{
-                relation.setType("DISJOINT_CLASS");
-                props.add(new PropValPair(propUri,new CypherValue(OWL2.disjointWith.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(OWL2.disjointWith.getURI()))));
+                relation = disjointClass;
             }break;
         }
-        relation.setName("r");
-        relation.setProperties(props);
         CypherPath path = new CypherPath(cls1).connectThrough(relation).with(cls2);
         cypher.create(path).returnIdOf(relation);
         return cypher.getCypher();
@@ -504,33 +517,92 @@ public class CypherUtil {
         prop2.setLabel(null);
         prop2.setProperties(null);
         props.clear();
-        CypherPath path = null;
+        CypherRelationship relation = null;
         switch (rel){
             case SUBPROPERTY_OF:{
-                path = new CypherPath(prop1).connectThrough(subPropertyOf).with(prop2);
+                relation = subPropertyOf;
             }break;
             case EQUIVALENT_PROPERTY:{
-                path = new CypherPath(prop1).connectThrough().with(prop2);
+                relation = equalProperty;
             }break;
             case DISJOINT_PROPERTY:{
-
+                relation = disjointProperty;
             }break;
             case INVERSE_OF:{
-
+                relation = inverseProperty;
             }break;
         }
-
         CypherPath path = new CypherPath(prop1).connectThrough(relation).with(prop2);
         cypher.create(path).returnIdOf(relation);
         return cypher.getCypher();
     }
 
-    public static String intoRelCypher(Individual ins1,Individual ins2,INSTANCE_REL rel){
-        return null;
+    public static String intoRelCypher(Individual ins1,Individual ins2,INSTANCE_REL rel) throws Exception{
+        Cypher cypher = new Cypher();
+        Set<PropValPair> props = new HashSet<>();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins1.getURI()))));
+        CypherNode i1 = new CypherNode("ins1","OWL_NAMEDINDIVIDUAL",props);
+        props.clear();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins2.getURI()))));
+        CypherNode i2 = new CypherNode("ins2","OWL_NAMEDINDIVIDUAL",props);
+        List<CypherNode> nodes = new ArrayList<>();
+        nodes.add(i1);
+        nodes.add(i2);
+        cypher.match(nodes);  //拼接查询两个实例的cypher语句
+        i1.setLabel(null);
+        i1.setProperties(null);
+        i2.setLabel(null);
+        i2.setProperties(null);
+        props.clear();
+        CypherRelationship relation = null;
+        switch (rel){
+            case SAME_AS:{
+                relation = sameIns;
+            }break;
+            case DIFFERENT_FROM:{
+                relation = differentIns;
+            }break;
+        }
+        CypherPath path = new CypherPath(i1).connectThrough(relation).with(i2);
+        cypher.create(path).returnIdOf(relation);
+        return cypher.getCypher();
     }
 
-    public static String intoRelCypher(Individual ins1, Individual ins2, ObjectProperty prop){
-        return null;
+    public static String intoRelCypher(Individual ins1, Individual ins2, ObjectProperty prop) throws Exception{
+        Cypher cypher = new Cypher();
+        Set<PropValPair> props = new HashSet<>();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins1.getURI()))));
+        CypherNode i1 = new CypherNode("ins1","OWL_NAMEDINDIVIDUAL",props);
+        props.clear();
+        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins2.getURI()))));
+        CypherNode i2 = new CypherNode("ins2","OWL_NAMEDINDIVIDUAL",props);
+        List<CypherNode> nodes = new ArrayList<>();
+        nodes.add(i1);
+        nodes.add(i2);
+        cypher.match(nodes);  //拼接查询两个实例的cypher语句
+        i1.setLabel(null);
+        i1.setProperties(null);
+        i2.setLabel(null);
+        i2.setProperties(null);
+        props.clear();
+        CypherRelationship relation = new CypherRightRelationship();
+        String relPre = getPreLabel(prop.getURI());
+        relation.setName("r");
+        relation.setType("`" + relPre + "`");
+        props.add(new PropValPair(propUri,new CypherValue(prop.getURI())));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(prop.getURI()))));
+        ExtendedIterator<RDFNode> labels = prop.listLabels(null);
+        List<String> labelVals = new ArrayList<>();
+        while(labels.hasNext()){
+            labelVals.add(labels.next().asLiteral().getString());
+        }
+        if(labelVals.size() != 0){
+            props.add(new PropValPair(new CypherProperty("`rdfs:label`"),new CypherValue(labelVals,DataType.STR)));
+        }
+        relation.setProperties(props);
+        CypherPath path = new CypherPath(i1).connectThrough(relation).with(i2);
+        cypher.create(path).returnIdOf(relation);
+        return cypher.getCypher();
     }
 
 }
