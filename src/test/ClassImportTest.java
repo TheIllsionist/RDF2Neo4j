@@ -6,7 +6,7 @@ import org.apache.jena.ontology.OntClass;
 import rdfImporter.ClassImporter;
 import rdfImporter.impl.cypherImpl.CypherClassImporter;
 import util.CLASS_REL;
-import util.Pair;
+
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;
@@ -17,7 +17,7 @@ import java.util.Set;
  */
 public class ClassImportTest {
     public static void main(String args[]) throws Exception {
-        RdfProvider rdfProvider = new FileRdfProvider("G:\\");
+        RdfProvider rdfProvider = new FileRdfProvider("F:\\");
         ClassImporter importer = new CypherClassImporter();
         Set<OntClass> classes = rdfProvider.allOntClasses();
         Queue<Pair<OntClass,OntClass>> subClsRels = rdfProvider.allSubClassOfRels();

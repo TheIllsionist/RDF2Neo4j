@@ -6,7 +6,7 @@ import org.apache.jena.ontology.OntProperty;
 import rdfImporter.PropImporter;
 import rdfImporter.impl.cypherImpl.CypherPropImporter;
 import util.PROPERTY_REL;
-import util.Pair;
+
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;

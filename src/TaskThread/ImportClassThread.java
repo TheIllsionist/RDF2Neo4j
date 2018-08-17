@@ -8,12 +8,12 @@ import java.util.Queue;
 /**
  * Created by The Illsionist on 2018/8/16.
  */
-public class ClassImportThread implements Runnable{
+public class ImportClassThread implements Runnable{
 
     private final Queue<OntClass> classes;  //一批任务
     private final ClassImporter importer;  //导入器
 
-    public ClassImportThread(Queue<OntClass> classes,ClassImporter importer){
+    public ImportClassThread(Queue<OntClass> classes, ClassImporter importer){
         this.classes = classes;
         this.importer = importer;
     }
@@ -21,7 +21,7 @@ public class ClassImportThread implements Runnable{
     @Override
     public void run() {
         try{
-            while(!classes.isEmpty()){
+            while(!classes.isEmpty()){  //不断从队列中取出导入直到队空
                 importer.loadClassIn(classes.poll());
             }
         }catch (Exception e){

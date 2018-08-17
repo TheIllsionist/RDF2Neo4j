@@ -3,6 +3,7 @@ package datasource.impl;
 import datasource.RdfProvider;
 import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.impl.SelectorImpl;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
@@ -12,12 +13,11 @@ import org.apache.jena.vocabulary.RDFS;
 import util.CLASS_REL;
 import util.INSTANCE_REL;
 import util.PROPERTY_REL;
-import util.Pair;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
+import Model.*;
 
 
 public class FileRdfProvider implements RdfProvider {
@@ -237,8 +237,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Pair<OntClass, OntClass>> relsBetweenClasses(CLASS_REL rel) {
-        Queue<Pair<OntClass,OntClass>> subObjPair = new LinkedList<>();
+    public Queue<Relation<OntClass,CLASS_REL>> relsBetweenClasses(CLASS_REL rel) {
+        Queue<Relation<OntClass,CLASS_REL>> subObjPair = new LinkedList<>();
         Selector selector = null;
         switch (rel){
             case SUBCLASS_OF:selector = new SimpleSelector(null,RDFS.subClassOf,(OntClass)null);break; //是父子关系时,子类在前,父类在后
@@ -251,7 +251,7 @@ public class FileRdfProvider implements RdfProvider {
             OntClass fClass = ontModel.getOntClass(statement.getSubject().getURI());  //是父子关系时,fClass是子类
             OntClass sClass = ontModel.getOntClass(statement.getObject().asResource().getURI());  //是父子关系时,sClass是父类
             if(fClass.hasProperty(RDF.type,OWL.Class) && sClass.hasProperty(RDF.type,OWL.Class)){
-                subObjPair.add(new Pair<>(fClass,sClass));
+                subObjPair.add(new Relation<>(fClass,sClass,rel));
             }
         }
         return subObjPair;
@@ -263,8 +263,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Pair<OntProperty, OntProperty>> relsBetweenProperties(PROPERTY_REL rel) {
-        Queue<Pair<OntProperty,OntProperty>> subObjPair = new LinkedList<>();
+    public Queue<Relation<OntProperty,PROPERTY_REL>> relsBetweenProperties(PROPERTY_REL rel) {
+        Queue<Relation<OntProperty,PROPERTY_REL>> subObjPair = new LinkedList<>();
         Selector selector = null;
         switch (rel){
             case SUBPROPERTY_OF:selector = new SimpleSelector(null,RDFS.subPropertyOf,(OntProperty)null);break;
@@ -280,7 +280,7 @@ public class FileRdfProvider implements RdfProvider {
             if(fProperty == null || sProperty == null){
                 continue;
             }
-            subObjPair.add(new Pair<>(fProperty,sProperty));
+            subObjPair.add(new Relation<>(fProperty,sProperty,rel));
         }
         return subObjPair;
     }
@@ -291,8 +291,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Pair<Individual, Individual>> relsBetweenIndividuals(INSTANCE_REL rel) {
-        Queue<Pair<Individual,Individual>> subObjPair = new LinkedList<>();
+    public Queue<Relation<Individual,INSTANCE_REL>> relsBetweenIndividuals(INSTANCE_REL rel) {
+        Queue<Relation<Individual,INSTANCE_REL>> subObjPair = new LinkedList<>();
         Selector selector = null;
         switch (rel){
             case SAME_AS:selector = new SimpleSelector(null,OWL.sameAs,(Individual) null);break;
@@ -304,10 +304,38 @@ public class FileRdfProvider implements RdfProvider {
             Individual fIns = ontModel.getIndividual(statement.getSubject().getURI());
             Individual sIns = ontModel.getIndividual(statement.getObject().asResource().getURI());
             if(fIns.isIndividual() && sIns.isIndividual()){
-                subObjPair.add(new Pair<>(fIns,sIns));
+                subObjPair.add(new Relation<>(fIns,sIns,rel));
             }
         }
         return subObjPair;
+    }
+
+    @Override
+    public Queue<Relation<Individual, ObjectProperty>> relsBetweenIndividuals() {
+        Queue<Relation<Individual,ObjectProperty>> rels = new LinkedList<>();
+        Selector selector = new SimpleSelector(){
+            @Override
+            public boolean selects(Statement s){  //复写select方法
+                return s.getSubject().hasProperty(RDF.type,OWL2.NamedIndividual)
+                        && s.getPredicate().hasProperty(RDF.type,OWL.ObjectProperty)
+                        && s.getObject().asResource().hasProperty(RDF.type,OWL2.NamedIndividual);
+            }
+            @Override
+            public boolean test(Statement s){
+                return s.getSubject().hasProperty(RDF.type,OWL2.NamedIndividual)
+                        && s.getPredicate().hasProperty(RDF.type,OWL.ObjectProperty)
+                        && s.getObject().asResource().hasProperty(RDF.type,OWL2.NamedIndividual);
+            }
+        };
+        StmtIterator iter = ontModel.listStatements(selector);  //列出所有满足条件的三元组
+        while(iter.hasNext()){
+            Statement statement = iter.nextStatement();
+            Individual fIns = ontModel.getIndividual(statement.getSubject().getURI());
+            Individual sIns = ontModel.getIndividual(statement.getObject().asResource().getURI());
+            ObjectProperty rel = ontModel.getObjectProperty(statement.getPredicate().getURI());
+            rels.add(new Relation<>(fIns,sIns,rel));
+        }
+        return rels;
     }
 
     /**
@@ -315,7 +343,7 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有父子类对的队列
      */
     @Override
-    public Queue<Pair<OntClass, OntClass>> allSubClassOfRels() {
+    public Queue<Relation<OntClass,CLASS_REL>> allSubClassOfRels() {
         return relsBetweenClasses(CLASS_REL.SUBCLASS_OF);
     }
 
@@ -324,7 +352,7 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有类对的队列
      */
     @Override
-    public Queue<Pair<OntClass,OntClass>> allEqualClassRels(){
+    public Queue<Relation<OntClass,CLASS_REL>> allEqualClassRels(){
         return relsBetweenClasses(CLASS_REL.EQUIVALENT_CLASS);
     }
 
@@ -333,7 +361,7 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有类对的队列
      */
     @Override
-    public Queue<Pair<OntClass,OntClass>> allDisJointClassRels(){
+    public Queue<Relation<OntClass,CLASS_REL>> allDisJointClassRels(){
         return relsBetweenClasses(CLASS_REL.DISJOINT_CLASS);
     }
 
@@ -342,8 +370,8 @@ public class FileRdfProvider implements RdfProvider {
      * TODO:当前实现方式比较慢,后面换成直接从OntModel中迭代出所有的类间关系
      * @return
      */
-    public Queue<Pair<OntClass,OntClass>> allClassRels(){
-        Queue<Pair<OntClass,OntClass>> rels = new LinkedList<>(allSubClassOfRels());
+    public Queue<Relation<OntClass,CLASS_REL>> allClassRels(){
+        Queue<Relation<OntClass,CLASS_REL>> rels = new LinkedList<>(allSubClassOfRels());
         rels.addAll(allEqualClassRels());
         rels.addAll(allDisJointClassRels());
         return rels;
@@ -354,7 +382,7 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有父子属性对的队列
      */
     @Override
-    public Queue<Pair<OntProperty, OntProperty>> allSubPropertyOfRels() {
+    public Queue<Relation<OntProperty,PROPERTY_REL>> allSubPropertyOfRels() {
         return relsBetweenProperties(PROPERTY_REL.SUBPROPERTY_OF);
     }
 
@@ -363,7 +391,7 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Pair<OntProperty,OntProperty>> allEqualPropertyRels(){
+    public Queue<Relation<OntProperty,PROPERTY_REL>> allEqualPropertyRels(){
         return relsBetweenProperties(PROPERTY_REL.EQUIVALENT_PROPERTY);
     }
 
@@ -372,7 +400,7 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Pair<OntProperty,OntProperty>> allDisjointPropRels(){
+    public Queue<Relation<OntProperty,PROPERTY_REL>> allDisjointPropRels(){
         return relsBetweenProperties(PROPERTY_REL.DISJOINT_PROPERTY);
     }
 
@@ -381,52 +409,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Pair<OntProperty,OntProperty>> allInversePropRels(){
+    public Queue<Relation<OntProperty,PROPERTY_REL>> allInversePropRels(){
         return relsBetweenProperties(PROPERTY_REL.INVERSE_OF);
-    }
-
-    /**
-     * 返回所有的rdfs:domain关系的主宾对
-     * 该方法能起到实际作用的前提是推理机设置了某个属性的定义域是几个类别的并集
-     * @return
-     */
-    @Override
-    public Queue<Pair<OntProperty, OntClass>> allRdfsDomainRels() {
-        Queue<Pair<OntProperty,OntClass>> subObjPair = new LinkedList<>();
-        Selector selector = new SimpleSelector(null,RDFS.domain,(OntClass)null);
-        StmtIterator iterator = ontModel.listStatements(selector);
-        while (iterator.hasNext()){
-            Statement statement = iterator.nextStatement();
-            OntProperty sub = ontModel.getOntProperty(statement.getSubject().getURI());
-            OntClass obj = ontModel.getOntClass(statement.getObject().asResource().getURI());
-            if((sub.hasProperty(RDF.type,OWL.DatatypeProperty) || sub.hasProperty(RDF.type,OWL.ObjectProperty))
-                    && obj.hasProperty(RDF.type,OWL.Class)){
-                subObjPair.add(new Pair<>(sub,obj));
-            }
-        }
-        return subObjPair;
-    }
-
-    /**
-     * 返回所有的rdfs:range关系的主宾对
-     * 该方法能起到实际作用的前提是推理机设置了某个属性的值域是几个类别的并集
-     * @return
-     */
-    @Override
-    public Queue<Pair<OntProperty, OntClass>> allRdfsRangeRels() {
-        Queue<Pair<OntProperty,OntClass>> subObjPair = new LinkedList<>();
-        Selector selector = new SimpleSelector(null,RDFS.range,(OntResource)null);
-        StmtIterator iterator = ontModel.listStatements(selector);
-        while (iterator.hasNext()){
-            Statement statement = iterator.nextStatement();
-            OntProperty sub = ontModel.getOntProperty(statement.getSubject().getURI());
-            OntClass obj = ontModel.getOntClass(statement.getObject().asResource().getURI());
-            if((sub.hasProperty(RDF.type,OWL.DatatypeProperty) || sub.hasProperty(RDF.type,OWL.ObjectProperty))
-                    && obj.hasProperty(RDF.type,OWL.Class)){
-                subObjPair.add(new Pair<>(sub,obj));
-            }
-        }
-        return subObjPair;
     }
 
 }
