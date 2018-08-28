@@ -19,6 +19,7 @@ import static util.PROPERTY_REL.*;
 
 /**
  * Created by The Illsionist on 2018/8/8.
+ * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
  */
 public class CypherUtil {
 
@@ -43,35 +44,34 @@ public class CypherUtil {
     private static final CypherRelationship rdfsDomain;
     private static final CypherRelationship sameIns;
     private static final CypherRelationship differentIns;
-
     static {  //静态初始化函数和final关键字都保证了初始化时状态和引用的可见性
-        nsMap = new HashMap<>();
-        fillNsMap();
+        nsMap = new HashMap<>();  //记录命名空间全称和简写的相互对应
+        fillNsMap();         //将相互对应关系填充进去,后面可以修改为从配置文件中读取
         propUri = new CypherProperty("uri");
         propPreLabel = new CypherProperty("preLabel");
 
-        clsWord = getWordCypherNode(Words.OWL_CLASS);
-        dpWord = getWordCypherNode(Words.OWL_DATATYPEPROPERTY);
-        opWord = getWordCypherNode(Words.OWL_OBJECTPROPERTY);
-        insWord = getWordCypherNode(Words.OWL_NAMEDINDIVIDUAL);
+        clsWord = getWordCypherNode(Words.OWL_CLASS);    //声明类所用关键字
+        dpWord = getWordCypherNode(Words.OWL_DATATYPEPROPERTY);  //声明数据类型属性所用关键字
+        opWord = getWordCypherNode(Words.OWL_OBJECTPROPERTY);   //声明对象属性所用关键字
+        insWord = getWordCypherNode(Words.OWL_NAMEDINDIVIDUAL); //声明实例所用关键字
 
-        isA = getWordCypherRelation("ISA");
-        rdfsLabel = getWordCypherRelation("RDFS_LABEL");
-        rdfsComment = getWordCypherRelation("RDFS_COMMENT");
-        rdfsRange = getWordCypherRelation("RANGE");
-        rdfsDomain = getWordCypherRelation("DOMAIN");
+        isA = getWordCypherRelation("ISA");    //用ISA关系来声明元素
+        rdfsLabel = getWordCypherRelation("RDFS_LABEL");   //用RDFS_LABEL关系来声明元素的可读名
+        rdfsComment = getWordCypherRelation("RDFS_COMMENT"); //用RDFS_COMMENT关系来解释概念的含义
+        rdfsRange = getWordCypherRelation("RANGE");    //用RDFS_RANGE关系声明属性的值域
+        rdfsDomain = getWordCypherRelation("DOMAIN"); //用RDFS_DOMAIN关系声明属性的定义域
 
-        subClassOf = getWordCypherRelation(SUBCLASS_OF);
-        equalClass = getWordCypherRelation(EQUIVALENT_CLASS);
-        disjointClass = getWordCypherRelation(DISJOINT_CLASS);
+        subClassOf = getWordCypherRelation(SUBCLASS_OF);   //用SUBCLASS_OF关系声明两个类之间的父子关系
+        equalClass = getWordCypherRelation(EQUIVALENT_CLASS);  //用EQUIVALENT_CLASS关系表示两个类是等价的
+        disjointClass = getWordCypherRelation(DISJOINT_CLASS);  //用DISJOINT_CLASS关系表示两个类的实例集合不相交
 
-        subPropertyOf = getWordCypherRelation(SUBPROPERTY_OF);
-        equalProperty = getWordCypherRelation(EQUIVALENT_PROPERTY);
-        disjointProperty = getWordCypherRelation(DISJOINT_PROPERTY);
-        inverseProperty = getWordCypherRelation(INVERSE_OF);
+        subPropertyOf = getWordCypherRelation(SUBPROPERTY_OF);  //用SUBPROPERTY_OF关系声明两个属性之间的父子关系
+        equalProperty = getWordCypherRelation(EQUIVALENT_PROPERTY);//用EQUIVALENT_PROPERTY关系表示两个属性是等价的
+        disjointProperty = getWordCypherRelation(DISJOINT_PROPERTY);//用DISJOINT_PROPERTY关系表示对同一主语这两个属性的值集合不相交
+        inverseProperty = getWordCypherRelation(INVERSE_OF);//用INVERSE_OF关系表示两个属性刚好表达了相反的语义(主语宾语刚好互换位置)
 
-        sameIns = getWordCypherRelation(SAME_AS);
-        differentIns = getWordCypherRelation(INSTANCE_REL.DIFFERENT_FROM);
+        sameIns = getWordCypherRelation(SAME_AS);  //用SAME_AS关系表示两个实例就是同一个实例
+        differentIns = getWordCypherRelation(DIFFERENT_FROM); //用DIFFERENT_FROM关系表示两个实例并不是同一实例
     }
     /**
      * 将命名空间全称和前缀以及前缀和全称的对应加入nsMap
@@ -183,7 +183,7 @@ public class CypherUtil {
             }break;
         }
         rel.setProperties(props);
-        rel.setName("r");  //TODO:这里可以加上名字?
+        rel.setName("r");  //TODO:内部实现,先加上元素名称吧
         return rel;
     }
     private static CypherRelationship getWordCypherRelation(PROPERTY_REL proRel){
@@ -212,7 +212,7 @@ public class CypherUtil {
             }break;
         }
         rel.setProperties(props);
-        rel.setName("r");  //TODO:这里可以加上名字?
+        rel.setName("r");  //TODO:内部实现,先加上元素名称吧
         return rel;
     }
     private static CypherRelationship getWordCypherRelation(INSTANCE_REL insRel){
@@ -231,10 +231,15 @@ public class CypherUtil {
             }break;
         }
         rel.setProperties(props);
-        rel.setName("r");  //TODO:这里可以加上名字?
+        rel.setName("r");  //TODO:内部实现,先加上元素名称吧
         return rel;
     }
 
+    /**
+     * 拼接初始化图数据库的Cypher语句
+     * 语句作用是将定义类、属性、实例这三种基本元素的OWL词汇写入
+     * @return
+     */
     public static String initGraphCypher(){
         Cypher cypher = new Cypher();
         List<CypherPath> words = new LinkedList<>();
@@ -242,7 +247,7 @@ public class CypherUtil {
         words.add(new CypherPath(dpWord));
         words.add(new CypherPath(opWord));
         words.add(new CypherPath(insWord));
-        cypher.merge(words);  //注意这里使用merge
+        cypher.merge(words);  //使用merge,不重复写词汇
         return cypher.getCypher();
     }
 
@@ -251,7 +256,6 @@ public class CypherUtil {
      * @param ontClass &nbsp 输入的类
      * @return 将该类按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
-     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
      */
     public static String intoClsCypher(OntClass ontClass) throws Exception{
         Cypher cypher = new Cypher().match(clsWord);  //拼接查找定义类结点的词汇结点的Cypher
@@ -259,13 +263,13 @@ public class CypherUtil {
         List<CypherPath> pathes = new LinkedList<>();
         pathes.add(new CypherPath(cls).connectThrough(isA).with(new CypherNode("clsWord")));  //声明结点是OWL类
         CypherNode node = new CypherNode(null,new HashSet<>());
-        Iterator<RDFNode> labelNodes = ontClass.listLabels(null);
+        Iterator<RDFNode> labelNodes = ontClass.listLabels(null);  //列出该类结点的rdfs:label
         while(labelNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(labelNodes.next().toString())));
             pathes.add(new CypherPath(cls).connectThrough(rdfsLabel).with(node));  //给结点加一个rdfs:label
             node.getProperties().clear();
         }
-        Iterator<RDFNode> commentNodes = ontClass.listComments(null);
+        Iterator<RDFNode> commentNodes = ontClass.listComments(null);  //列出该类结点的rdfs:comment
         while(commentNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(commentNodes.next().toString())));
             pathes.add(new CypherPath(cls).connectThrough(rdfsComment).with(node)); //给结点加一个rdfs:comment
@@ -275,7 +279,7 @@ public class CypherUtil {
         clsProps.add(new LabelCondition(cls,"OWL_CLASS"));
         clsProps.add(new PropValPair(new CypherProperty("uri",cls),Operator.EQ_TO,new CypherValue(ontClass.getURI())));
         clsProps.add(new PropValPair(new CypherProperty("preLabel",cls),Operator.EQ_TO,new CypherValue(getPreLabel(ontClass.getURI()))));
-        cypher.create(pathes).set(clsProps).returnIdOf(cls);  //返回导入类的id
+        cypher.create(pathes).set(clsProps).returnIdOf(cls);  //返回导入的类结点的id
         return cypher.getCypher();
     }
 
@@ -284,11 +288,9 @@ public class CypherUtil {
      * @param ontProperty &nbsp 输入的属性
      * @return 将该属性按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
-     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
-     * TODO:需要加上该Property的Domain和Range
      */
     public static String intoPropCypher(OntProperty ontProperty) throws Exception{
-        boolean isObj = false;    //该属性是否是对象属性的标志
+        boolean isObj = false;    //是否为对象属性
         if(ontProperty.hasProperty(RDF.type,OWL.ObjectProperty)){
             isObj = true;
         }
@@ -296,56 +298,59 @@ public class CypherUtil {
         CypherNode prop = new CypherNode("prop");  //代表属性的结点
         Set<CypherCondition> propProps = new HashSet<>();
         List<CypherPath> pathes = new LinkedList<>();
-        if(!isObj){  //当前属性是数据类型属性
+        if(!isObj){         //数据类型属性
             propProps.add(new LabelCondition(prop,"OWL_DATATYPEPROPERTY"));
             cypher.match(dpWord);
             pathes.add(new CypherPath(prop).connectThrough(isA).with(new CypherNode("dpWord")));
-        }else{                     //当前属性是对象属性
+        }else{             //对象属性
             propProps.add(new LabelCondition(prop,"OWL_OBJECTPROPERTY"));
             cypher.match(opWord);
             pathes.add(new CypherPath(prop).connectThrough(isA).with(new CypherNode("opWord")));
         }
-        CypherNode node = new CypherNode(null,new HashSet<>());  //用到的中间结点
-        Iterator<RDFNode> labelNodes = ontProperty.listLabels(null);  //列出该属性的所有rdfsLabel
+        CypherNode node = new CypherNode(null,new HashSet<>());  //用到的临时结点
+        Iterator<RDFNode> labelNodes = ontProperty.listLabels(null);  //列出该属性的所有rdfs:label
         while(labelNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(labelNodes.next().toString())));
             pathes.add(new CypherPath(prop).connectThrough(rdfsLabel).with(node));   //给结点加一个rdfs:label
             node.getProperties().clear();
         }
-        Iterator<RDFNode> commentNodes = ontProperty.listComments(null);  //列出该属性的所有rdfsComment
+        Iterator<RDFNode> commentNodes = ontProperty.listComments(null);  //列出该属性的所有rdfs:comment
         while(commentNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(commentNodes.next().toString())));
             pathes.add(new CypherPath(prop).connectThrough(rdfsComment).with(node)); //给结点加一个rdfs:comment
             node.getProperties().clear();
         }
-        if(isObj){  //当前属性是对象属性,则需要将它的Domain和Range添加进来,TODO:数据类型属性的Domain和Range暂时不管
-            int dC = 0;  //记录该属性domain的数目
+        int dC = 0;  //记录该属性domain的数目
+        ExtendedIterator<OntClass> domains = (ExtendedIterator<OntClass>) ontProperty.listDomain();  //列出该属性的Domain
+        node.setLabel("OWL_CLASS");
+        while(domains.hasNext()){       //逐个domain迭代处理
+            node.setName("d" + dC++);
+            node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(domains.next().getURI()))));
+            cypher.match(node);            //拼接查询该domain的语句
+            node.getProperties().clear();  //把临时node的preLabel条件去掉
+        }
+        node.setLabel(null);
+        while(dC > 0){
+            node.setName("d" + --dC);
+            pathes.add(new CypherPath(prop).connectThrough(rdfsDomain).with(node));  //给结点加一个domain
+        }
+        if(isObj){  //对象属性,还需将它的Range添加进来
             int rC = 0;  //记录该属性range的数目
-            ExtendedIterator<OntClass> domains = (ExtendedIterator<OntClass>) ontProperty.listDomain();
-            ExtendedIterator<OntClass> ranges = (ExtendedIterator<OntClass>) ontProperty.listRange();
+            ExtendedIterator<OntClass> ranges = (ExtendedIterator<OntClass>) ontProperty.listRange(); //列出该属性的Range
             node.setLabel("OWL_CLASS");
-            while(domains.hasNext()){   //查询各个domain
-                node.setName("d" + dC++);
-                node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(domains.next().getURI()))));
-                cypher.match(node);
-                node.getProperties().clear();  //把临时node的preLabel条件去掉
-            }
             while(ranges.hasNext()){   //查询各个range
                 node.setName("r" + rC++);
                 node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ranges.next().getURI()))));
-                cypher.match(node);
-                node.getProperties().clear();  //把临时node的preLabel条件去掉
+                cypher.match(node);   //拼接查询该range的语句
+                node.getProperties().clear(); //把临时node的preLabel条件去掉
             }
             node.setLabel(null);
-            while(dC > 0){
-                node.setName("d" + --dC);
-                pathes.add(new CypherPath(prop).connectThrough(rdfsDomain).with(node));  //给结点加一个domain
-            }
             while(rC > 0){
                 node.setName("r" + --rC);
                 pathes.add(new CypherPath(prop).connectThrough(rdfsRange).with(node));   //给结点加一个range
             }
         }
+        //TODO:数据类型属性的Range还未处理
         propProps.add(new PropValPair(new CypherProperty("uri",prop),Operator.EQ_TO,new CypherValue(ontProperty.getURI())));
         propProps.add(new PropValPair(new CypherProperty("preLabel",prop),Operator.EQ_TO,new CypherValue(getPreLabel(ontProperty.getURI()))));
         cypher.create(pathes).set(propProps).returnIdOf(prop);  //返回导入属性的结点的id
@@ -357,26 +362,24 @@ public class CypherUtil {
      * @param individual &nbsp 输入的实例
      * @return 将该实例按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
-     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
-     * TODO:需要加入该实例所属的所有的类之间的rdf:type关系
      */
     public static String intoInsCypher(Individual individual) throws Exception{
         Cypher cypher = new Cypher();  //cypher拼接对象
         CypherNode ins = new CypherNode("ins");
-        Set<CypherCondition> insProps = new HashSet<>(); //该实例所拥有的属性:rdfsLabel,rdfsComment
+        Set<CypherCondition> insProps = new HashSet<>(); //该实例所拥有的属性
         List<CypherPath> pathes = new LinkedList<>();
         insProps.add(new LabelCondition(ins,"OWL_NAMEDINDIVIDUAL"));
-        cypher.match(insWord);  //拼接-查询实例定义词汇
+        cypher.match(insWord);  //拼接查询实例定义词汇
         pathes.add(new CypherPath(ins).connectThrough(isA).with(new CypherNode("insWord"))); //加一条词汇定义path
         CypherNode node = new CypherNode(null,new HashSet<>());   //临时使用node
-        //处理实例的rdfsLabels
+        //处理实例的rdfs:labels
         Iterator<RDFNode> labelNodes = individual.listLabels(null);
         while(labelNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(labelNodes.next().toString())));
             pathes.add(new CypherPath(ins).connectThrough(rdfsLabel).with(node));  //给结点加一个rdfs:label
             node.getProperties().clear();
         }
-        //处理实例的rdfsComments
+        //处理实例的rdfs:comments
         Iterator<RDFNode> commentNodes = individual.listComments(null);
         while(commentNodes.hasNext()){
             node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(commentNodes.next().toString())));
@@ -387,20 +390,20 @@ public class CypherUtil {
         node.setLabel("DP_VALUE");           //node也是临时结点
         CypherRelationship tDpRel = new CypherRightRelationship(); //临时使用Cypher关系代表dp
         Set<PropValPair> dpProps = new HashSet<>();  //临时使用Cypher关系的属性集代表该dp的属性集
-        List<String> dpLabels = new ArrayList<>();   //临时记录该dp的rdfslabels
+        List<String> dpLabels = new ArrayList<>();   //临时记录该dp的rdfs:labels
         List<String> dpVals = new ArrayList<>();     //临时记录该dp的值集合
         StmtIterator stmtIter = individual.listProperties();  //列出该实例的所有属性
         while(stmtIter.hasNext()){
             Statement statement = stmtIter.nextStatement();
             Property prop = statement.getPredicate();
-            if(prop.hasProperty(RDF.type,OWL.DatatypeProperty)){  //当前属性是数据类型属性
-                OntProperty oDp = individual.getOntModel().getDatatypeProperty(prop.getURI());  //根据uri获取对应的DP
+            if(prop.hasProperty(RDF.type,OWL.DatatypeProperty)){  //数据类型属性
+                DatatypeProperty oDp = individual.getOntModel().getDatatypeProperty(prop.getURI());  //根据uri获取对应的DP
                 //提取并设置第三元
-                StmtIterator dpValIter = individual.listProperties(oDp);  //取该DP的值(注意:原程序中做了区分,现在都用String)
+                StmtIterator dpValIter = individual.listProperties(oDp);  //取该DP的值(TODO:原程序中做了区分,现在都用String)
                 while(dpValIter.hasNext()){
                     dpVals.add(dpValIter.nextStatement().getLiteral().getString());
                 }
-                if(dpVals.size() == 0)  //如果这个数据类型属性没有值,跳过该属性
+                if(dpVals.size() == 0)  //此数据类型属性没有值,跳过
                     continue;
                 node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(dpVals,DataType.STR)));
                 //提取并记录第二元的属性labels,uri,preLabel
@@ -430,13 +433,13 @@ public class CypherUtil {
         while(clses.hasNext()){
             node.setName("c" + cC++);
             node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(clses.next().getURI()))));
-            cypher.match(node);
+            cypher.match(node);  //查询出该类
             node.getProperties().clear();
         }
         node.setLabel(null);
         while(cC > 0){
             node.setName("c" + --cC);
-            pathes.add(new CypherPath(ins).connectThrough(isA).with(node));  //给结点加一个rdf:type
+            pathes.add(new CypherPath(ins).connectThrough(isA).with(node));  //给结点加一个rdf:type关系指向它所属的一个类
         }
         insProps.add(new PropValPair(new CypherProperty("uri",ins),Operator.EQ_TO,new CypherValue(individual.getURI())));
         insProps.add(new PropValPair(new CypherProperty("preLabel",ins),Operator.EQ_TO,new CypherValue(getPreLabel(individual.getURI()))));
@@ -451,7 +454,6 @@ public class CypherUtil {
      * @param rel &nbsp 要写入的关系
      * @return
      * @throws Exception
-     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
      */
     public static String intoRelCypher(OntClass class1,OntClass class2,CLASS_REL rel) throws Exception{
         Cypher cypher = new Cypher();
@@ -494,11 +496,10 @@ public class CypherUtil {
      * @param rel &nbsp 要写入的关系
      * @return
      * @throws Exception
-     * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
      */
     public static String intoRelCypher(OntProperty ontProp1,OntProperty ontProp2,PROPERTY_REL rel) throws Exception{
-        boolean isObj = false;
-        if(ontProp1.hasProperty(RDF.type,OWL.ObjectProperty)){ //判断属性是对象属性还是数据类型属性
+        boolean isObj = false;  //对象属性标志
+        if(ontProp1.hasProperty(RDF.type,OWL.ObjectProperty)){
             isObj = true;
         }
         Cypher cypher = new Cypher();
@@ -537,6 +538,14 @@ public class CypherUtil {
         return cypher.getCypher();
     }
 
+    /**
+     * 拼接将两个实例之间的某种语义关系写入Neo4j数据库的Cypher语句
+     * @param ins1 &nbsp 先序关系中的第1个实例
+     * @param ins2 &nbsp 先序关系中的第2个实例
+     * @param rel &nbsp 要写入的关系
+     * @return
+     * @throws Exception
+     */
     public static String intoRelCypher(Individual ins1,Individual ins2,INSTANCE_REL rel) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
@@ -568,6 +577,14 @@ public class CypherUtil {
         return cypher.getCypher();
     }
 
+    /**
+     * 拼接将两个实例之间的某种属性关系写入Neo4j数据库的Cypher语句
+     * @param ins1 &nbsp 先序关系中的第1个实例
+     * @param ins2 &nbsp 先序关系中的第2个实例
+     * @param prop &nbsp 要写入的关系
+     * @return
+     * @throws Exception
+     */
     public static String intoRelCypher(Individual ins1, Individual ins2, ObjectProperty prop) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
