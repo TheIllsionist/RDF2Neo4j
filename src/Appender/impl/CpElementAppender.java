@@ -1,4 +1,5 @@
-package util;
+package Appender.impl;
+
 import cypherelement.basic.*;
 import cypherelement.clause.Cypher;
 import org.apache.jena.ontology.*;
@@ -11,17 +12,22 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import util.CLASS_REL;
+import util.INSTANCE_REL;
+import util.PROPERTY_REL;
+import util.Words;
 import java.security.InvalidParameterException;
 import java.util.*;
 import static util.CLASS_REL.*;
-import static util.INSTANCE_REL.*;
+import static util.INSTANCE_REL.DIFFERENT_FROM;
+import static util.INSTANCE_REL.SAME_AS;
 import static util.PROPERTY_REL.*;
 
 /**
  * Created by The Illsionist on 2018/8/8.
  * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
  */
-public class CypherUtil {
+public class CpElementAppender extends CypherAppender {
 
     private static final HashMap<String,String> nsMap;
     private static final CypherProperty propUri;
@@ -44,6 +50,7 @@ public class CypherUtil {
     private static final CypherRelationship rdfsDomain;
     private static final CypherRelationship sameIns;
     private static final CypherRelationship differentIns;
+
     static {  //静态初始化函数和final关键字都保证了初始化时状态和引用的可见性
         nsMap = new HashMap<>();  //记录命名空间全称和简写的相互对应
         fillNsMap();         //将相互对应关系填充进去,后面可以修改为从配置文件中读取
@@ -73,6 +80,7 @@ public class CypherUtil {
         sameIns = getWordCypherRelation(SAME_AS);  //用SAME_AS关系表示两个实例就是同一个实例
         differentIns = getWordCypherRelation(DIFFERENT_FROM); //用DIFFERENT_FROM关系表示两个实例并不是同一实例
     }
+
     /**
      * 将命名空间全称和前缀以及前缀和全称的对应加入nsMap
      */
@@ -94,6 +102,7 @@ public class CypherUtil {
         nsMap.put("wgbq","http://kse.seu.edu.cn/wgbq#");
         nsMap.put("xgbg","http://kse.seu.edu.cn/xgbg#");
     }
+
     /**
      * 得到一个Uri的前缀,比如'http://www.w3.org/2002/07/owl#DatatypeProperty'的简称是'owl:DatatypeProperty'
      */
@@ -257,7 +266,7 @@ public class CypherUtil {
      * @return 将该类按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
      */
-    public static String intoClsCypher(OntClass ontClass) throws Exception{
+    public String intoCls(OntClass ontClass) throws Exception{
         Cypher cypher = new Cypher().match(clsWord);  //拼接查找定义类结点的词汇结点的Cypher
         CypherNode cls = new CypherNode("cls");
         List<CypherPath> pathes = new LinkedList<>();
@@ -289,7 +298,7 @@ public class CypherUtil {
      * @return 将该属性按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
      */
-    public static String intoPropCypher(OntProperty ontProperty) throws Exception{
+    public String intoProp(OntProperty ontProperty) throws Exception{
         boolean isObj = false;    //是否为对象属性
         if(ontProperty.hasProperty(RDF.type,OWL.ObjectProperty)){
             isObj = true;
@@ -363,7 +372,7 @@ public class CypherUtil {
      * @return 将该实例按照知识表示规范导入数据库的合法Cypher语句
      * @throws Exception
      */
-    public static String intoInsCypher(Individual individual) throws Exception{
+    public String intoIns(Individual individual) throws Exception{
         Cypher cypher = new Cypher();  //cypher拼接对象
         CypherNode ins = new CypherNode("ins");
         Set<CypherCondition> insProps = new HashSet<>(); //该实例所拥有的属性
@@ -455,13 +464,13 @@ public class CypherUtil {
      * @return
      * @throws Exception
      */
-    public static String intoRelCypher(OntClass class1,OntClass class2,CLASS_REL rel) throws Exception{
+    public String intoRel(OntClass class1,OntClass class2,CLASS_REL rel) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(class1.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(class1.getURI()))));
         CypherNode cls1 = new CypherNode("cls1","OWL_CLASS",props);
         props.clear();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(class2.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(class2.getURI()))));
         CypherNode cls2 = new CypherNode("cls2","OWL_CLASS",props);
         List<CypherNode> nodes = new ArrayList<>();
         nodes.add(cls1);
@@ -497,17 +506,17 @@ public class CypherUtil {
      * @return
      * @throws Exception
      */
-    public static String intoRelCypher(OntProperty ontProp1,OntProperty ontProp2,PROPERTY_REL rel) throws Exception{
+    public String intoRel(OntProperty ontProp1,OntProperty ontProp2,PROPERTY_REL rel) throws Exception{
         boolean isObj = false;  //对象属性标志
         if(ontProp1.hasProperty(RDF.type,OWL.ObjectProperty)){
             isObj = true;
         }
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ontProp1.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ontProp1.getURI()))));
         CypherNode prop1 = new CypherNode("prop1",isObj ? "OWL_OBJECTPROPERTY" : "OWL_DATATYPEPROPERTY",props);
         props.clear();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ontProp2.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ontProp2.getURI()))));
         CypherNode prop2 = new CypherNode("prop2",isObj ? "OWL_OBJECTPROPERTY" : "OWL_DATATYPEPROPERTY",props);
         List<CypherNode> nodes = new ArrayList<>();
         nodes.add(prop1);
@@ -546,13 +555,13 @@ public class CypherUtil {
      * @return
      * @throws Exception
      */
-    public static String intoRelCypher(Individual ins1,Individual ins2,INSTANCE_REL rel) throws Exception{
+    public String intoRel(Individual ins1,Individual ins2,INSTANCE_REL rel) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins1.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ins1.getURI()))));
         CypherNode i1 = new CypherNode("ins1","OWL_NAMEDINDIVIDUAL",props);
         props.clear();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins2.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ins2.getURI()))));
         CypherNode i2 = new CypherNode("ins2","OWL_NAMEDINDIVIDUAL",props);
         List<CypherNode> nodes = new ArrayList<>();
         nodes.add(i1);
@@ -585,13 +594,13 @@ public class CypherUtil {
      * @return
      * @throws Exception
      */
-    public static String intoRelCypher(Individual ins1, Individual ins2, ObjectProperty prop) throws Exception{
+    public String intoRel(Individual ins1, Individual ins2, ObjectProperty prop) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins1.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ins1.getURI()))));
         CypherNode i1 = new CypherNode("ins1","OWL_NAMEDINDIVIDUAL",props);
         props.clear();
-        props.add(new PropValPair(propPreLabel,new CypherValue(CypherUtil.getPreLabel(ins2.getURI()))));
+        props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ins2.getURI()))));
         CypherNode i2 = new CypherNode("ins2","OWL_NAMEDINDIVIDUAL",props);
         List<CypherNode> nodes = new ArrayList<>();
         nodes.add(i1);
