@@ -1,5 +1,7 @@
 package rdfImporter.impl.cypherImpl;
 
+import Appender.impl.CpElementAppender;
+import Appender.impl.CypherAppender;
 import concurrentannotation.GuardedBy;
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
@@ -13,8 +15,8 @@ import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.InsImporter;
 import rdfImporter.cache.InsCache;
-import util.CypherUtil;
 import util.INSTANCE_REL;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -22,6 +24,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @ThreadSafe
 public class CypherInsImporter implements InsImporter{
 
+    private final CypherAppender appender;
     private final static int DEFAULT_RELCOUNT = 6000;  //TODO:默认初始容量的选择还有待调研
     private final static ReentrantReadWriteLock relLock = new ReentrantReadWriteLock();
     @GuardedBy("relLock") private final static HashMap<String,HashMap<String,HashSet<String>>> insRels = new HashMap<>();
@@ -42,7 +45,10 @@ public class CypherInsImporter implements InsImporter{
                 insRels.get(ins1).get(ins2).add(rel);
             }
         }
+    }
 
+    public CypherInsImporter(CypherAppender appender){
+        this.appender = appender;
     }
 
     /**
@@ -76,10 +82,10 @@ public class CypherInsImporter implements InsImporter{
      */
     @Override
     public boolean loadInsIn(Individual individual) throws Exception {
-        String preLabel = CypherUtil.getPreLabel(individual.getURI());
+        String preLabel = CpElementAppender.getPreLabel(individual.getURI());
         if(!InsCache.insContained(preLabel)){  //知识库中不存在该实例
             try{
-                String cypher = CypherUtil.intoInsCypher(individual);  //拼接Cypher语句,可能属于耗时操作
+                String cypher = appender.intoIns(individual);  //拼接Cypher语句,可能属于耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                     @Override
                     public Integer execute(Transaction transaction) {
@@ -89,7 +95,7 @@ public class CypherInsImporter implements InsImporter{
                 });
                 InsCache.addIndividual(preLabel);  //写实例缓存
             }catch (NoSuchRecordException nRec){
-                System.out.println("Import failure of individual: " + CypherUtil.getPreLabel(individual.getURI()) +
+                System.out.println("Import failure of individual: " + CpElementAppender.getPreLabel(individual.getURI()) +
                         ". Maybe because of lack of initialization.");
                 throw nRec;
             }
@@ -99,16 +105,16 @@ public class CypherInsImporter implements InsImporter{
 
     @Override
     public boolean loadInsRelIn(Individual ins1, Individual ins2, ObjectProperty property) throws Exception {
-        String pre1 = CypherUtil.getPreLabel(ins1.getURI());
-        String pre2 = CypherUtil.getPreLabel(ins2.getURI());
-        String rel = CypherUtil.getPreLabel(property.getURI());
+        String pre1 = CpElementAppender.getPreLabel(ins1.getURI());
+        String pre2 = CpElementAppender.getPreLabel(ins2.getURI());
+        String rel = CpElementAppender.getPreLabel(property.getURI());
         //写关系的两个实例必须要先存在于知识库中
         if(!InsCache.insContained(pre1) || !InsCache.insContained(pre2)){
             return false;
         }
         final String cypher;   //下面利用了两次锁检查,目的也是尽量减少在临界区内部执行耗时操作
         if(!relExisted(pre1,pre2,rel)){  //两实例间的该关系不存在
-            cypher = CypherUtil.intoRelCypher(ins1,ins2,property); //耗时操作,在临界区外执行
+            cypher = appender.intoRel(ins1,ins2,property); //耗时操作,在临界区外执行
         }else{
             return true;  //关系已存在则直接返回
         }
@@ -117,16 +123,16 @@ public class CypherInsImporter implements InsImporter{
 
     @Override
     public boolean loadInsRelIn(Individual ins1, Individual ins2, INSTANCE_REL rel) throws Exception {
-        String pre1 = CypherUtil.getPreLabel(ins1.getURI());
-        String pre2 = CypherUtil.getPreLabel(ins2.getURI());
-        String uriRel = rel == INSTANCE_REL.SAME_AS ? CypherUtil.getPreLabel(OWL.sameAs.getURI()) : CypherUtil.getPreLabel(OWL.differentFrom.getURI());
+        String pre1 = CpElementAppender.getPreLabel(ins1.getURI());
+        String pre2 = CpElementAppender.getPreLabel(ins2.getURI());
+        String uriRel = rel == INSTANCE_REL.SAME_AS ? CpElementAppender.getPreLabel(OWL.sameAs.getURI()) : CpElementAppender.getPreLabel(OWL.differentFrom.getURI());
         //写关系的两个实例必须要先存在于知识库中
         if(!InsCache.insContained(pre1) || !InsCache.insContained(pre2)){
             return false;
         }
         final String cypher;
         if(!relExisted(pre1,pre2,uriRel)){
-            cypher = CypherUtil.intoRelCypher(ins1,ins2,rel);
+            cypher = appender.intoRel(ins1,ins2,rel);
         }else{
             return true;  //关系已存在则直接返回
         }

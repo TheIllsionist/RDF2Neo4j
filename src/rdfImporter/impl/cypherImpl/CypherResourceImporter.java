@@ -1,5 +1,6 @@
 package rdfImporter.impl.cypherImpl;
 
+import Appender.impl.CpElementAppender;
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
 import javafx.beans.property.Property;
@@ -12,7 +13,6 @@ import rdfImporter.ClassImporter;
 import rdfImporter.InsImporter;
 import rdfImporter.PropImporter;
 import rdfImporter.ResourceImporter;
-import util.CypherUtil;
 
 /**
  * Created by The Illsionist on 2018/7/18.
@@ -39,7 +39,7 @@ public class CypherResourceImporter implements ResourceImporter{
         Neo4jConnection.getSession().writeTransaction(new TransactionWork<Object>() {
             @Override
             public Object execute(Transaction transaction) {
-                transaction.run(CypherUtil.initGraphCypher());
+                transaction.run(CpElementAppender.initGraphCypher());
                 return null;
             }
         });
