@@ -62,8 +62,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 类别集合
      */
     @Override
-    public Set<OntClass> allOntClasses() {
-        HashSet<OntClass> classes = new HashSet<>();
+    public Queue<OntClass> allOntClasses() {
+        Queue<OntClass> classes = new LinkedList<>();
         ExtendedIterator<OntClass> classIter = ontModel.listClasses();
         while (classIter.hasNext()){
             classes.add(classIter.next());
@@ -76,8 +76,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 属性集合
      */
     @Override
-    public Set<OntProperty> allOntProperties(){
-        HashSet<OntProperty> ontProperties = new HashSet<>();
+    public Queue<OntProperty> allOntProperties(){
+        Queue<OntProperty> ontProperties = new LinkedList<>();
         ExtendedIterator<OntProperty> ontPropertyIter = ontModel.listAllOntProperties();
         while(ontPropertyIter.hasNext()){
             ontProperties.add(ontPropertyIter.next());
@@ -90,8 +90,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 所有的数据类型属性的集合
      */
     @Override
-    public Set<DatatypeProperty> allDatatypeProperties() {
-        HashSet<DatatypeProperty> dps = new HashSet<>();
+    public Queue<DatatypeProperty> allDatatypeProperties() {
+        Queue<DatatypeProperty> dps = new LinkedList<>();
         ExtendedIterator<DatatypeProperty> dpIter = ontModel.listDatatypeProperties();
         while(dpIter.hasNext()){
             dps.add(dpIter.next());
@@ -104,8 +104,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 所有的对象属性的集合
      */
     @Override
-    public Set<ObjectProperty> allObjectProperties() {
-        HashSet<ObjectProperty> objectProperties = new HashSet<>();
+    public Queue<ObjectProperty> allObjectProperties() {
+        Queue<ObjectProperty> objectProperties = new LinkedList<>();
         ExtendedIterator<ObjectProperty> opIter = ontModel.listObjectProperties();
         while(opIter.hasNext()){
             objectProperties.add(opIter.next());
@@ -118,8 +118,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 所有的实例的集合
      */
     @Override
-    public Set<Individual> allIndividuals() {
-        HashSet<Individual> individuals = new HashSet<>();
+    public Queue<Individual> allIndividuals() {
+        Queue<Individual> individuals = new LinkedList<>();
         ExtendedIterator<Individual> insIter = ontModel.listIndividuals();
         while(insIter.hasNext()){
             individuals.add(insIter.next());
@@ -133,8 +133,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 属于指定类别ontClass的实例集合
      */
     @Override
-    public Set<Individual> allIndividualsOfClass(OntClass ontClass) {
-        Set<Individual> individuals = new HashSet<>();
+    public Queue<Individual> allIndividualsOfClass(OntClass ontClass) {
+        Queue<Individual> individuals = new LinkedList<>();
         ExtendedIterator<? extends OntResource> insIter = ontClass.listInstances(true);  //这里列出了直接属于该类的实例
         while (insIter.hasNext()){
             individuals.add((Individual)insIter.next());
@@ -371,6 +371,19 @@ public class FileRdfProvider implements RdfProvider {
         Queue<Relation<OntClass,Words>> rels = new LinkedList<>(allSubClassOfRels());
         rels.addAll(allEqualClassRels());
         rels.addAll(allDisJointClassRels());
+        return rels;
+    }
+
+    /**
+     * 返回属性之间的所有关系
+     * TODO:当前实现方式比较慢,后面换成直接从OntModel中迭代出所有的类间关系
+     * @return
+     */
+    public Queue<Relation<OntProperty,Words>> allPropertyRels(){
+        Queue<Relation<OntProperty,Words>> rels = new LinkedList<>(allSubPropertyOfRels());
+        rels.addAll(allEqualPropertyRels());
+        rels.addAll(allDisjointPropRels());
+        rels.addAll(allInversePropRels());
         return rels;
     }
 

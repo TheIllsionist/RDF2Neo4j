@@ -4,7 +4,6 @@ import Model.Relation;
 import org.apache.jena.ontology.OntClass;
 import rdfImporter.ClassImporter;
 import util.Words;
-
 import java.util.Queue;
 
 /**
@@ -12,8 +11,8 @@ import java.util.Queue;
  */
 public class ImportClassRelThread implements Runnable {
 
-    private final Queue<Relation<OntClass, Words>> rels;
-    private final ClassImporter importer;
+    private final Queue<Relation<OntClass, Words>> rels;  //一批类关系导入任务
+    private final ClassImporter importer;  //导入器
 
     public ImportClassRelThread(Queue<Relation<OntClass, Words>> rels,ClassImporter importer){
         this.rels = rels;

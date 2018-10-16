@@ -15,7 +15,7 @@ public class Neo4jConnection {    //TODO:后续还是换成连接池来实现吧
     private static Driver driver = null;  //静态成员,全局只有一个
 
     static {  //在静态初始化代码块中初始化,即在类加载时初始化
-        driver = GraphDatabase.driver("bolt://223.3.78.189:7687", AuthTokens.basic("neo4j","kseqa"));
+        driver = GraphDatabase.driver("bolt://223.3.72.8:7687", AuthTokens.basic("neo4j","kseqa"));
     }
 
     private static ThreadLocal<Session> session = new ThreadLocal<Session>(){

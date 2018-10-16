@@ -16,39 +16,39 @@ public interface RdfProvider {
      * 得到RDFModel中的所有类
      * @return &nbsp 包含RDFModel中所有类的集合
      */
-    Set<OntClass> allOntClasses();
+    Queue<OntClass> allOntClasses();
 
     /**
      * 得到RDFModel中的所有属性
      * @return
      */
-    Set<OntProperty> allOntProperties();
+    Queue<OntProperty> allOntProperties();
 
     /**
      * 得到RDFModel中的所有数据类型属性
      * @return
      */
-    Set<DatatypeProperty> allDatatypeProperties();
+    Queue<DatatypeProperty> allDatatypeProperties();
 
     /**
      * 得到RDFModel中的所有对象属性
      * @return
      */
-    Set<ObjectProperty> allObjectProperties();
+    Queue<ObjectProperty> allObjectProperties();
 
 
     /**
      * 得到RDFModel中所有的实例,包括空节点类的实例
      * @return &nbsp 包含RDFModel中所有实例的集合
      */
-    Set<Individual> allIndividuals();
+    Queue<Individual> allIndividuals();
 
     /**
      * 得到RDFModel中所有属于指定类的实例
      * @param ontClass
      * @return
      */
-    Set<Individual> allIndividualsOfClass(OntClass ontClass);
+    Queue<Individual> allIndividualsOfClass(OntClass ontClass);
 
     /**
      * 得到某本体资源的所有的rdfs:label集合
@@ -105,6 +105,10 @@ public interface RdfProvider {
      */
     Queue<Relation<Individual,ObjectProperty>> relsBetweenIndividuals();
 
+    /**
+     * 得到RDFModel中所有的类间关系
+     * @return
+     */
     Queue<Relation<OntClass,Words>> allClassRels();
 
     /**
@@ -119,11 +123,19 @@ public interface RdfProvider {
      */
     Queue<Relation<OntClass,Words>> allEqualClassRels();
 
+
     /**
      * 得到该RDFModel中所有的有不相交关系的类对
      * @return
      */
     Queue<Relation<OntClass,Words>> allDisJointClassRels();
+
+    /**
+     * 得到该RDFModel中所有的属性间关系
+     * @return
+     */
+    Queue<Relation<OntProperty,Words>> allPropertyRels();
+
 
     /**
      * 得到该RDFModel中所有的有父子关系的属性对,子属性在前,父属性在后

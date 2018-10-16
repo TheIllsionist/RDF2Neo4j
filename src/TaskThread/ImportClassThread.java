@@ -10,7 +10,7 @@ import java.util.Queue;
  */
 public class ImportClassThread implements Runnable{
 
-    private final Queue<OntClass> classes;  //一批任务
+    private final Queue<OntClass> classes;  //一批类导入任务
     private final ClassImporter importer;  //导入器
 
     public ImportClassThread(Queue<OntClass> classes, ClassImporter importer){

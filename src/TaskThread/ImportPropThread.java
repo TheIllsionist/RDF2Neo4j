@@ -9,7 +9,7 @@ import java.util.Queue;
  */
 public class ImportPropThread implements Runnable{
 
-    private final Queue<OntProperty> props;  //一批任务
+    private final Queue<OntProperty> props;  //一批属性导入任务
     private final PropImporter importer;  //导入器
 
     public ImportPropThread(Queue<OntProperty> props, PropImporter importer){

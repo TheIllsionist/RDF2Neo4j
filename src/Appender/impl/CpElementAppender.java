@@ -69,6 +69,7 @@ public class CpElementAppender extends Appender {
         sameIns = getWordCypherRelation(Words.OWL_SAME_AS);  //用SAME_AS关系表示两个实例就是同一个实例
         differentIns = getWordCypherRelation(Words.OWL_DFINS); //用DIFFERENT_FROM关系表示两个实例并不是同一实例
     }
+
     /**
      * 得到定义Node的词汇Node
      * @param word
