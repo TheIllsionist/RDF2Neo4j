@@ -4,7 +4,6 @@ import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -12,12 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 /**
  * 类及其关系缓存
- * 在知识库中类的数目是有限的,允许类及其关系缓存缓存全部的类及其之间的关系
+ * 知识库中类数目有限,所以可缓存全部的类及其之间的关系
  * 类之间主要有三种语义关系：subClassOf,equivalentClass,disjointClass
- * 当前缓存基于：{ 实例封闭 + 将线程安全性委托给现有线程安全类 + 特殊的线程读写方式 } 实现线程安全性
- * 多个线程写类缓存,多个线程读类缓存
- * 多个线程读/写关系,但每个线程所写关系的种类不同,一个线程只写某种特定的关系,每种特定的关系也只有一个线程写
- * 在缓存中用一个整型变量表征两个类之间的关系：1-subClassOf,2-equivalentClass,3-disjointClass
+ * 当前缓存基于：{实例封闭 + 将线程安全性委托给现有线程安全类 + 特殊的线程读写方式} 实现线程安全性
+ * 在缓存中用一整型变量表征两个类之间的关系：1-subClassOf,2-equivalentClass,3-disjointClass
  * 两个类间的3种关系是互斥存在的,即假如类A是类B的子类,则类A与类B之间不会再有其他关系
  */
 @ThreadSafe  //只有在特定的使用该缓存的方式下才满足线程安全性
@@ -55,7 +52,6 @@ public class ClassCache {
      * 判断某个类是否早已被写入知识库
      * @param preLabel &nbsp 唯一标识该类的preLabel(这只是目前的评价指标)
      * @return true表示该类已存在于知识库中,false表示该类未存在于知识库中
-     * 注:因写知识库和写缓存不在一个原子操作内,所以可能出现误判,但程序实现逻辑容忍误判
      */
     public static boolean classContained(String preLabel){
         return classWithRels.containsKey(preLabel);
@@ -63,7 +59,6 @@ public class ClassCache {
 
     /**
      * 往缓存中写入新类,缓存写入紧接着知识库写入并且一定要在知识库写入之后(禁止指令重排序)
-     * TODO:在只有一个线程写类缓存的情况下,知识库的写入和缓存的写入可以不在一个原子操作内,这也是造成误判的原因(注意,程序实现逻辑容忍误判)
      * @param preLabel &nbsp 唯一标识该类的preLabel
      */
     public static void addClass(String preLabel){
@@ -86,7 +81,7 @@ public class ClassCache {
      * @param fPre 先序类
      * @param lPre 后序类
      * @param tag 关系种类标签
-     * 注：在调用isRelExisted方法并确定关系不在知识库中后,将关系写入知识库然后才能调用该方法写缓存
+     * 注：在调用relExisted方法并确定关系不在知识库中后,将关系写入知识库然后才能调用该方法写缓存
      */
     public static void addRelation(String fPre,String lPre,int tag){
         classWithRels.get(fPre).put(lPre,tag);

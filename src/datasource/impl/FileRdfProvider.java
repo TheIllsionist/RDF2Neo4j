@@ -3,21 +3,18 @@ package datasource.impl;
 import datasource.RdfProvider;
 import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.rdf.model.impl.SelectorImpl;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import util.CLASS_REL;
-import util.INSTANCE_REL;
-import util.PROPERTY_REL;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.InputStream;
 import java.util.*;
 import Model.*;
+import util.Words;
 
 
 public class FileRdfProvider implements RdfProvider {
@@ -237,13 +234,13 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Relation<OntClass,CLASS_REL>> relsBetweenClasses(CLASS_REL rel) {
-        Queue<Relation<OntClass,CLASS_REL>> subObjPair = new LinkedList<>();
+    public Queue<Relation<OntClass, Words>> relsBetweenClasses(Words rel) {
+        Queue<Relation<OntClass,Words>> subObjPair = new LinkedList<>();
         Selector selector = null;
         switch (rel){
-            case SUBCLASS_OF:selector = new SimpleSelector(null,RDFS.subClassOf,(OntClass)null);break; //是父子关系时,子类在前,父类在后
-            case DISJOINT_CLASS:selector = new SimpleSelector(null,OWL2.disjointWith,(OntClass)null);break;
-            case EQUIVALENT_CLASS:selector = new SimpleSelector(null,OWL.equivalentClass,(OntClass)null);break;
+            case RDFS_SUBCLASSOF:selector = new SimpleSelector(null,RDFS.subClassOf,(OntClass)null);break; //是父子关系时,子类在前,父类在后
+            case OWL_DJCLASS:selector = new SimpleSelector(null,OWL2.disjointWith,(OntClass)null);break;
+            case OWL_EQCLASS:selector = new SimpleSelector(null,OWL.equivalentClass,(OntClass)null);break;
         }
         StmtIterator iterator = ontModel.listStatements(selector);
         while (iterator.hasNext()){
@@ -263,14 +260,14 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Relation<OntProperty,PROPERTY_REL>> relsBetweenProperties(PROPERTY_REL rel) {
-        Queue<Relation<OntProperty,PROPERTY_REL>> subObjPair = new LinkedList<>();
+    public Queue<Relation<OntProperty,Words>> relsBetweenProperties(Words rel) {
+        Queue<Relation<OntProperty,Words>> subObjPair = new LinkedList<>();
         Selector selector = null;
         switch (rel){
-            case SUBPROPERTY_OF:selector = new SimpleSelector(null,RDFS.subPropertyOf,(OntProperty)null);break;
-            case DISJOINT_PROPERTY:selector = new SimpleSelector(null, OWL2.propertyDisjointWith,(OntProperty)null);break;
-            case EQUIVALENT_PROPERTY:selector = new SimpleSelector(null,OWL.equivalentProperty,(OntProperty)null);break;
-            case INVERSE_OF:selector = new SimpleSelector(null,OWL2.inverseOf,(OntProperty)null);break;
+            case RDFS_SUBPROPERTYOF:selector = new SimpleSelector(null,RDFS.subPropertyOf,(OntProperty)null);break;
+            case OWL_DJPROPERTY:selector = new SimpleSelector(null, OWL2.propertyDisjointWith,(OntProperty)null);break;
+            case OWL_EQPROPERTY:selector = new SimpleSelector(null,OWL.equivalentProperty,(OntProperty)null);break;
+            case OWL_IVPROPERTY:selector = new SimpleSelector(null,OWL2.inverseOf,(OntProperty)null);break;
         }
         StmtIterator iterator = ontModel.listStatements(selector);
         while (iterator.hasNext()){
@@ -291,12 +288,12 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Relation<Individual,INSTANCE_REL>> relsBetweenIndividuals(INSTANCE_REL rel) {
-        Queue<Relation<Individual,INSTANCE_REL>> subObjPair = new LinkedList<>();
+    public Queue<Relation<Individual,Words>> relsBetweenIndividuals(Words rel) {
+        Queue<Relation<Individual,Words>> subObjPair = new LinkedList<>();
         Selector selector = null;
         switch (rel){
-            case SAME_AS:selector = new SimpleSelector(null,OWL.sameAs,(Individual) null);break;
-            case DIFFERENT_FROM:selector = new SimpleSelector(null,OWL.differentFrom,(Individual)null);break;
+            case OWL_SAME_AS:selector = new SimpleSelector(null,OWL.sameAs,(Individual) null);break;
+            case OWL_DFINS:selector = new SimpleSelector(null,OWL.differentFrom,(Individual)null);break;
         }
         StmtIterator iterator = ontModel.listStatements(selector);
         while(iterator.hasNext()){
@@ -343,8 +340,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有父子类对的队列
      */
     @Override
-    public Queue<Relation<OntClass,CLASS_REL>> allSubClassOfRels() {
-        return relsBetweenClasses(CLASS_REL.SUBCLASS_OF);
+    public Queue<Relation<OntClass,Words>> allSubClassOfRels() {
+        return relsBetweenClasses(Words.RDFS_SUBCLASSOF);
     }
 
     /**
@@ -352,8 +349,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有类对的队列
      */
     @Override
-    public Queue<Relation<OntClass,CLASS_REL>> allEqualClassRels(){
-        return relsBetweenClasses(CLASS_REL.EQUIVALENT_CLASS);
+    public Queue<Relation<OntClass,Words>> allEqualClassRels(){
+        return relsBetweenClasses(Words.OWL_EQCLASS);
     }
 
     /**
@@ -361,8 +358,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有类对的队列
      */
     @Override
-    public Queue<Relation<OntClass,CLASS_REL>> allDisJointClassRels(){
-        return relsBetweenClasses(CLASS_REL.DISJOINT_CLASS);
+    public Queue<Relation<OntClass,Words>> allDisJointClassRels(){
+        return relsBetweenClasses(Words.OWL_DJCLASS);
     }
 
     /**
@@ -370,8 +367,8 @@ public class FileRdfProvider implements RdfProvider {
      * TODO:当前实现方式比较慢,后面换成直接从OntModel中迭代出所有的类间关系
      * @return
      */
-    public Queue<Relation<OntClass,CLASS_REL>> allClassRels(){
-        Queue<Relation<OntClass,CLASS_REL>> rels = new LinkedList<>(allSubClassOfRels());
+    public Queue<Relation<OntClass,Words>> allClassRels(){
+        Queue<Relation<OntClass,Words>> rels = new LinkedList<>(allSubClassOfRels());
         rels.addAll(allEqualClassRels());
         rels.addAll(allDisJointClassRels());
         return rels;
@@ -382,8 +379,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return &nbsp 包含所有父子属性对的队列
      */
     @Override
-    public Queue<Relation<OntProperty,PROPERTY_REL>> allSubPropertyOfRels() {
-        return relsBetweenProperties(PROPERTY_REL.SUBPROPERTY_OF);
+    public Queue<Relation<OntProperty,Words>> allSubPropertyOfRels() {
+        return relsBetweenProperties(Words.RDFS_SUBPROPERTYOF);
     }
 
     /**
@@ -391,8 +388,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Relation<OntProperty,PROPERTY_REL>> allEqualPropertyRels(){
-        return relsBetweenProperties(PROPERTY_REL.EQUIVALENT_PROPERTY);
+    public Queue<Relation<OntProperty,Words>> allEqualPropertyRels(){
+        return relsBetweenProperties(Words.OWL_EQPROPERTY);
     }
 
     /**
@@ -400,8 +397,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Relation<OntProperty,PROPERTY_REL>> allDisjointPropRels(){
-        return relsBetweenProperties(PROPERTY_REL.DISJOINT_PROPERTY);
+    public Queue<Relation<OntProperty,Words>> allDisjointPropRels(){
+        return relsBetweenProperties(Words.OWL_DJPROPERTY);
     }
 
     /**
@@ -409,8 +406,8 @@ public class FileRdfProvider implements RdfProvider {
      * @return
      */
     @Override
-    public Queue<Relation<OntProperty,PROPERTY_REL>> allInversePropRels(){
-        return relsBetweenProperties(PROPERTY_REL.INVERSE_OF);
+    public Queue<Relation<OntProperty,Words>> allInversePropRels(){
+        return relsBetweenProperties(Words.OWL_IVPROPERTY);
     }
 
 }

@@ -3,7 +3,7 @@ package TaskThread;
 import Model.Relation;
 import org.apache.jena.ontology.OntProperty;
 import rdfImporter.PropImporter;
-import util.PROPERTY_REL;
+
 import java.util.Queue;
 
 /**

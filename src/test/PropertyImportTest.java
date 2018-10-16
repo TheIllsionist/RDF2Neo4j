@@ -1,11 +1,11 @@
 package test;
 
+import Model.Relation;
 import datasource.RdfProvider;
 import datasource.impl.FileRdfProvider;
 import org.apache.jena.ontology.OntProperty;
 import rdfImporter.PropImporter;
 import rdfImporter.impl.cypherImpl.CypherPropImporter;
-import util.PROPERTY_REL;
 
 import java.util.Iterator;
 import java.util.Queue;
@@ -19,10 +19,10 @@ public class PropertyImportTest {
         RdfProvider rdfProvider = new FileRdfProvider("G:\\");
         PropImporter importer = new CypherPropImporter();
         Set<OntProperty> props = rdfProvider.allOntProperties();
-        Queue<Pair<OntProperty,OntProperty>> subProRels = rdfProvider.allSubPropertyOfRels();
-        Queue<Pair<OntProperty,OntProperty>> equProRels = rdfProvider.allEqualPropertyRels();
-        Queue<Pair<OntProperty,OntProperty>> disProRels = rdfProvider.allDisjointPropRels();
-        Queue<Pair<OntProperty,OntProperty>> invProRels = rdfProvider.allInversePropRels();
+        Queue<Relation<OntProperty,PROPERTY_REL>> subProRels = rdfProvider.allSubPropertyOfRels();
+        Queue<Relation<OntProperty,PROPERTY_REL>> equProRels = rdfProvider.allEqualPropertyRels();
+        Queue<Relation<OntProperty,PROPERTY_REL>> disProRels = rdfProvider.allDisjointPropRels();
+        Queue<Relation<OntProperty,PROPERTY_REL>> invProRels = rdfProvider.allInversePropRels();
         Thread propThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -43,7 +43,7 @@ public class PropertyImportTest {
         Thread subRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntProperty,OntProperty> tmpRel = null;
+                Relation<OntProperty,PROPERTY_REL> tmpRel = null;
                 try{
                     while(!subProRels.isEmpty()){
                         tmpRel = subProRels.poll();
@@ -61,7 +61,7 @@ public class PropertyImportTest {
         Thread equRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntProperty,OntProperty> tmpRel = null;
+                Relation<OntProperty,PROPERTY_REL> tmpRel = null;
                 try{
                     while(!equProRels.isEmpty()){
                         tmpRel = equProRels.poll();
@@ -79,7 +79,7 @@ public class PropertyImportTest {
         Thread disRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntProperty,OntProperty> tmpRel = null;
+                Relation<OntProperty,PROPERTY_REL> tmpRel = null;
                 try{
                     while(!disProRels.isEmpty()){
                         tmpRel = disProRels.poll();
@@ -97,7 +97,7 @@ public class PropertyImportTest {
         Thread invRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntProperty,OntProperty> tmpRel = null;
+                Relation<OntProperty,PROPERTY_REL> tmpRel = null;
                 try{
                     while(!invProRels.isEmpty()){
                         tmpRel = invProRels.poll();

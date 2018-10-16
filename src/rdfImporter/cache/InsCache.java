@@ -10,14 +10,14 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by The Illsionist on 2018/8/16.
  * 实例缓存,多线程读,多线程写
- * 虽然存在多个线程写实例缓存,但是因为每个线程所写内容不存在交集,因此即使存在“先检查-后执行”竞态条件,仍能保证线程安全性
+ * 多线程读/写实例缓存,由于存在“先检查-后执行”竞态条件,因此必须要保证每个线程所写入的实例集间互不相交才可保证不重复写
  */
 public class InsCache {
 
     private final static int DEFAULT_INSCOUNT = 3000;  //TODO:默认初始容量的选择还有待调研
     private final static ConcurrentHashMap<String,Individual> individuals = new ConcurrentHashMap<>();
 
-    static {
+    static {  //缓存所有已在数据库中存在的实例
         Record rec = null;
         StatementResult mRst = Neo4jConnection.getSession().run("match(ins:OWL_NAMEDINDIVIDUAL) return ins.preLabel");
         while(mRst.hasNext()){
@@ -27,10 +27,19 @@ public class InsCache {
         }
     }
 
+    /**
+     * 判断某实例是否已存在于数据库中
+     * @param preLabel
+     * @return
+     */
     public static boolean insContained(String preLabel){
         return individuals.containsKey(preLabel);
     }
 
+    /**
+     * 往缓存中加入新实例
+     * @param preLabel
+     */
     public static void addIndividual(String preLabel){
         individuals.put(preLabel,null);
     }

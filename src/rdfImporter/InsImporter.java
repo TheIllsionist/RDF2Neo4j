@@ -2,7 +2,7 @@ package rdfImporter;
 
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.ObjectProperty;
-import util.INSTANCE_REL;
+import util.Words;
 
 /**
  * Created by The Illsionist on 2018/8/13.
@@ -34,5 +34,5 @@ public interface InsImporter {
      * @return
      * @throws Exception
      */
-    public boolean loadInsRelIn(Individual ins1, Individual ins2, INSTANCE_REL rel) throws Exception;
+    public boolean loadInsRelIn(Individual ins1, Individual ins2, Words rel) throws Exception;
 }

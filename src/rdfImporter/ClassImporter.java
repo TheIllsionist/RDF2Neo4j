@@ -1,7 +1,7 @@
 package rdfImporter;
 
 import org.apache.jena.ontology.OntClass;
-import util.CLASS_REL;
+import util.Words;
 
 /**
  * Created by The Illsionist on 2018/8/13.
@@ -25,6 +25,6 @@ public interface ClassImporter {
      * @return
      * @throws Exception
      */
-    public boolean loadClassRelIn(OntClass class1, OntClass class2, CLASS_REL rel) throws Exception;
+    public boolean loadClassRelIn(OntClass class1, OntClass class2, Words rel) throws Exception;
 
 }

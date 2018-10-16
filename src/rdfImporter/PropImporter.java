@@ -1,7 +1,7 @@
 package rdfImporter;
 
 import org.apache.jena.ontology.OntProperty;
-import util.PROPERTY_REL;
+import util.Words;
 
 /**
  * Created by The Illsionist on 2018/8/13.
@@ -23,6 +23,6 @@ public interface PropImporter {
      * @return
      * @throws Exception
      */
-    public boolean loadPropertyRelIn(OntProperty prop1, OntProperty prop2, PROPERTY_REL rel) throws Exception;
+    public boolean loadPropertyRelIn(OntProperty prop1, OntProperty prop2, Words rel) throws Exception;
 
 }

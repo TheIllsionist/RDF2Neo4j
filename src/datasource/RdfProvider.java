@@ -3,9 +3,8 @@ package datasource;
 import Model.Relation;
 import org.apache.jena.ontology.*;
 import org.apache.jena.rdf.model.Literal;
-import util.CLASS_REL;
-import util.INSTANCE_REL;
-import util.PROPERTY_REL;
+import util.Words;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -84,21 +83,21 @@ public interface RdfProvider {
      * @param rel &nbsp 指定的类间关系类型
      * @return
      */
-    Queue<Relation<OntClass,CLASS_REL>> relsBetweenClasses(CLASS_REL rel);
+    Queue<Relation<OntClass,Words>> relsBetweenClasses(Words rel);
 
     /**
      * 根据指定的属性间关系类型,从此RDF提供者中提取所有该关系的主宾对
      * @param rel &nbsp 指定的属性间关系类型
      * @return
      */
-    Queue<Relation<OntProperty,PROPERTY_REL>> relsBetweenProperties(PROPERTY_REL rel);
+    Queue<Relation<OntProperty,Words>> relsBetweenProperties(Words rel);
 
     /**
      * 根据指定的实例间关系类型,从此RDF提供者中提取所有该关系的主宾对
      * @param rel &nbsp 指定的实例间关系类型
      * @return
      */
-    Queue<Relation<Individual,INSTANCE_REL>> relsBetweenIndividuals(INSTANCE_REL rel);
+    Queue<Relation<Individual,Words>> relsBetweenIndividuals(Words rel);
 
     /**
      * 得到该RDFModel中所有的对象属性关系
@@ -106,49 +105,49 @@ public interface RdfProvider {
      */
     Queue<Relation<Individual,ObjectProperty>> relsBetweenIndividuals();
 
-    Queue<Relation<OntClass,CLASS_REL>> allClassRels();
+    Queue<Relation<OntClass,Words>> allClassRels();
 
     /**
      * 得到该RDFModel中所有的有父子关系的类对,子类在前,父类在后
      * @return
      */
-    Queue<Relation<OntClass,CLASS_REL>> allSubClassOfRels();
+    Queue<Relation<OntClass,Words>> allSubClassOfRels();
 
     /**
      * 得到该RDFModel中所有的有等价关系的类对
      * @return
      */
-    Queue<Relation<OntClass,CLASS_REL>> allEqualClassRels();
+    Queue<Relation<OntClass,Words>> allEqualClassRels();
 
     /**
      * 得到该RDFModel中所有的有不相交关系的类对
      * @return
      */
-    Queue<Relation<OntClass,CLASS_REL>> allDisJointClassRels();
+    Queue<Relation<OntClass,Words>> allDisJointClassRels();
 
     /**
      * 得到该RDFModel中所有的有父子关系的属性对,子属性在前,父属性在后
      * @return
      */
-    Queue<Relation<OntProperty,PROPERTY_REL>> allSubPropertyOfRels();
+    Queue<Relation<OntProperty,Words>> allSubPropertyOfRels();
 
     /**
      * 得到该RDFModel中所有具有等价关系的属性对
      * @return
      */
-    Queue<Relation<OntProperty,PROPERTY_REL>> allEqualPropertyRels();
+    Queue<Relation<OntProperty,Words>> allEqualPropertyRels();
 
     /**
      * 得到该RDFModel中所有具有不相交关系的属性对
      * @return
      */
-    public Queue<Relation<OntProperty,PROPERTY_REL>> allDisjointPropRels();
+    public Queue<Relation<OntProperty,Words>> allDisjointPropRels();
 
     /**
      * 得到该RDFModel中所有具有相反语义关系的属性对
      * @return
      */
-    public Queue<Relation<OntProperty,PROPERTY_REL>> allInversePropRels();
+    public Queue<Relation<OntProperty,Words>> allInversePropRels();
 
 
 }

@@ -15,8 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * 在知识库中属性的数目是有限的,因此属性缓存缓存全部的属性及其之间的关系
  * 属性之间主要有四种关系：subPropertyOf,equivalentProperty,disjointProperty,inverseOf
  * 当前缓存基于：{ 实例封闭 + 将线程安全性委托给现有线程安全类 + 特殊的线程读写方式 } 实现线程安全性
- * 只有一个线程写属性缓存,多个线程读属性缓存
- * 多个线程读/写关系,但每个线程所写关系的种类不同,一个线程只写某种特定的关系,每种特定的关系也只有一个线程写
  * 在缓存中用一个整型变量表征两个属性之间的关系：1-subPropertyOf,2-equivalentProperty,3-disjointProperty,4-inverseOf
  * 两个属性间的4种关系是互斥存在的,即假如属性A是属性B的子属性,则属性A与属性B之间不会再有其他关系
  */
@@ -57,7 +55,6 @@ public class PropertyCache {
      * 判断某个属性是否早已被写入知识库
      * @param preLabel &nbsp 唯一标识该属性的preLabel(这只是目前的评价指标)
      * @return true表示该属性已存在于知识库中,false表示该属性未存在于知识库中
-     * 注:因写知识库和写缓存不在一个原子操作内,所以可能出现误判,但程序实现逻辑容忍未存在误判
      */
     public static boolean isPropertyContained(String preLabel){
         return propWithRels.containsKey(preLabel);
@@ -65,7 +62,6 @@ public class PropertyCache {
 
     /**
      * 往缓存中写入新属性,缓存写入紧接着知识库写入并且一定要在知识库写入之后(禁止指令重排序)
-     * 因为只有一个线程写属性缓存,所以知识库的写入和缓存的写入可以不在一个原子操作内,这也是造成误判的原因
      * @param preLabel &nbsp 唯一标识该类的preLabel
      */
     public static void addProperty(String preLabel){
@@ -88,6 +84,7 @@ public class PropertyCache {
      * @param fPre 先序属性
      * @param lPre 后序属性
      * @param tag 关系种类标签
+     * 注：在调用isRelExisted方法并确定关系不在知识库中后,将关系写入知识库然后才能调用该方法写缓存
      */
     public static void addRelation(String fPre,String lPre,int tag){
         propWithRels.get(fPre).put(lPre,tag);

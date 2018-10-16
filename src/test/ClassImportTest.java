@@ -1,11 +1,11 @@
 package test;
 
+import Model.Relation;
 import datasource.RdfProvider;
 import datasource.impl.FileRdfProvider;
 import org.apache.jena.ontology.OntClass;
 import rdfImporter.ClassImporter;
 import rdfImporter.impl.cypherImpl.CypherClassImporter;
-import util.CLASS_REL;
 
 import java.util.Iterator;
 import java.util.Queue;
@@ -20,9 +20,9 @@ public class ClassImportTest {
         RdfProvider rdfProvider = new FileRdfProvider("F:\\");
         ClassImporter importer = new CypherClassImporter();
         Set<OntClass> classes = rdfProvider.allOntClasses();
-        Queue<Pair<OntClass,OntClass>> subClsRels = rdfProvider.allSubClassOfRels();
-        Queue<Pair<OntClass,OntClass>> equClsRels = rdfProvider.allEqualClassRels();
-        Queue<Pair<OntClass,OntClass>> disClsRels = rdfProvider.allDisJointClassRels();
+        Queue<Relation<OntClass,CLASS_REL>> subClsRels = rdfProvider.allSubClassOfRels();
+        Queue<Relation<OntClass,CLASS_REL>> equClsRels = rdfProvider.allEqualClassRels();
+        Queue<Relation<OntClass,CLASS_REL>> disClsRels = rdfProvider.allDisJointClassRels();
         Thread classThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -43,7 +43,7 @@ public class ClassImportTest {
         Thread subRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntClass,OntClass> tmpRel = null;
+                Relation<OntClass,CLASS_REL> tmpRel = null;
                 try{
                     while(!subClsRels.isEmpty()){
                         tmpRel = subClsRels.poll();
@@ -61,7 +61,7 @@ public class ClassImportTest {
         Thread equRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntClass,OntClass> tmpRel = null;
+                Relation<OntClass,CLASS_REL> tmpRel = null;
                 try{
                     while(!equClsRels.isEmpty()){
                         tmpRel = equClsRels.poll();
@@ -79,7 +79,7 @@ public class ClassImportTest {
         Thread disRelThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Pair<OntClass,OntClass> tmpRel = null;
+                Relation<OntClass,CLASS_REL> tmpRel = null;
                 try{
                     while(!disClsRels.isEmpty()){
                         tmpRel = disClsRels.poll();

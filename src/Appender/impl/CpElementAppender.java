@@ -1,5 +1,6 @@
 package Appender.impl;
 
+import Appender.Appender;
 import cypherelement.basic.*;
 import cypherelement.clause.Cypher;
 import org.apache.jena.ontology.*;
@@ -12,22 +13,15 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import util.CLASS_REL;
-import util.INSTANCE_REL;
-import util.PROPERTY_REL;
 import util.Words;
-import java.security.InvalidParameterException;
 import java.util.*;
-import static util.CLASS_REL.*;
-import static util.INSTANCE_REL.DIFFERENT_FROM;
-import static util.INSTANCE_REL.SAME_AS;
-import static util.PROPERTY_REL.*;
+
 
 /**
  * Created by The Illsionist on 2018/8/8.
  * TODO:目前没有确定使用对象方式拼接更利于GC回收还是直接使用语句拼接更利于GC回收,后面需要进行实验
  */
-public class CpElementAppender extends CypherAppender {
+public class CpElementAppender extends Appender {
 
     private static final HashMap<String,String> nsMap;
     private static final CypherProperty propUri;
@@ -56,62 +50,30 @@ public class CpElementAppender extends CypherAppender {
         fillNsMap();         //将相互对应关系填充进去,后面可以修改为从配置文件中读取
         propUri = new CypherProperty("uri");
         propPreLabel = new CypherProperty("preLabel");
-
         clsWord = getWordCypherNode(Words.OWL_CLASS);    //声明类所用关键字
         dpWord = getWordCypherNode(Words.OWL_DATATYPEPROPERTY);  //声明数据类型属性所用关键字
         opWord = getWordCypherNode(Words.OWL_OBJECTPROPERTY);   //声明对象属性所用关键字
         insWord = getWordCypherNode(Words.OWL_NAMEDINDIVIDUAL); //声明实例所用关键字
-
-        isA = getWordCypherRelation("ISA");    //用ISA关系来声明元素
-        rdfsLabel = getWordCypherRelation("RDFS_LABEL");   //用RDFS_LABEL关系来声明元素的可读名
-        rdfsComment = getWordCypherRelation("RDFS_COMMENT"); //用RDFS_COMMENT关系来解释概念的含义
-        rdfsRange = getWordCypherRelation("RANGE");    //用RDFS_RANGE关系声明属性的值域
-        rdfsDomain = getWordCypherRelation("DOMAIN"); //用RDFS_DOMAIN关系声明属性的定义域
-
-        subClassOf = getWordCypherRelation(SUBCLASS_OF);   //用SUBCLASS_OF关系声明两个类之间的父子关系
-        equalClass = getWordCypherRelation(EQUIVALENT_CLASS);  //用EQUIVALENT_CLASS关系表示两个类是等价的
-        disjointClass = getWordCypherRelation(DISJOINT_CLASS);  //用DISJOINT_CLASS关系表示两个类的实例集合不相交
-
-        subPropertyOf = getWordCypherRelation(SUBPROPERTY_OF);  //用SUBPROPERTY_OF关系声明两个属性之间的父子关系
-        equalProperty = getWordCypherRelation(EQUIVALENT_PROPERTY);//用EQUIVALENT_PROPERTY关系表示两个属性是等价的
-        disjointProperty = getWordCypherRelation(DISJOINT_PROPERTY);//用DISJOINT_PROPERTY关系表示对同一主语这两个属性的值集合不相交
-        inverseProperty = getWordCypherRelation(INVERSE_OF);//用INVERSE_OF关系表示两个属性刚好表达了相反的语义(主语宾语刚好互换位置)
-
-        sameIns = getWordCypherRelation(SAME_AS);  //用SAME_AS关系表示两个实例就是同一个实例
-        differentIns = getWordCypherRelation(DIFFERENT_FROM); //用DIFFERENT_FROM关系表示两个实例并不是同一实例
+        isA = getWordCypherRelation2(Words.RDF_TYPE);    //用ISA关系来声明元素
+        rdfsLabel = getWordCypherRelation2(Words.RDFS_LABEL);   //用RDFS_LABEL关系来声明元素的可读名
+        rdfsComment = getWordCypherRelation2(Words.RDFS_COMMENT); //用RDFS_COMMENT关系来解释概念的含义
+        rdfsRange = getWordCypherRelation2(Words.RDFS_RANGE);    //用RDFS_RANGE关系声明属性的值域
+        rdfsDomain = getWordCypherRelation2(Words.RDFS_DOMAIN); //用RDFS_DOMAIN关系声明属性的定义域
+        subClassOf = getWordCypherRelation(Words.RDFS_SUBCLASSOF);   //用SUBCLASS_OF关系声明两个类之间的父子关系
+        equalClass = getWordCypherRelation(Words.OWL_EQCLASS);  //用EQUIVALENT_CLASS关系表示两个类是等价的
+        disjointClass = getWordCypherRelation(Words.OWL_DJCLASS);  //用DISJOINT_CLASS关系表示两个类的实例集合不相交
+        subPropertyOf = getWordCypherRelation(Words.RDFS_SUBPROPERTYOF);  //用SUBPROPERTY_OF关系声明两个属性之间的父子关系
+        equalProperty = getWordCypherRelation(Words.OWL_EQPROPERTY);//用EQUIVALENT_PROPERTY关系表示两个属性是等价的
+        disjointProperty = getWordCypherRelation(Words.OWL_DJPROPERTY);//用DISJOINT_PROPERTY关系表示对同一主语这两个属性的值集合不相交
+        inverseProperty = getWordCypherRelation(Words.OWL_IVPROPERTY);//用INVERSE_OF关系表示两个属性刚好表达了相反的语义(主语宾语刚好互换位置)
+        sameIns = getWordCypherRelation(Words.OWL_SAME_AS);  //用SAME_AS关系表示两个实例就是同一个实例
+        differentIns = getWordCypherRelation(Words.OWL_DFINS); //用DIFFERENT_FROM关系表示两个实例并不是同一实例
     }
-
     /**
-     * 将命名空间全称和前缀以及前缀和全称的对应加入nsMap
+     * 得到定义Node的词汇Node
+     * @param word
+     * @return
      */
-    private static void fillNsMap(){
-        nsMap.put("http://kse.seu.edu.cn/rdb#","rdb");
-        nsMap.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#","rdf");
-        nsMap.put("http://www.w3.org/2000/01/rdf-schema#","rdfs");
-        nsMap.put("http://www.w3.org/2002/07/owl#","owl");
-        nsMap.put("http://www.w3.org/2001/XMLSchema#","xsd");
-        nsMap.put("http://kse.seu.edu.cn/meta#","meta");
-        nsMap.put("http://kse.seu.edu.cn/wgbq#","wgbq");
-        nsMap.put("http://kse.seu.edu.cn/xgbg#","xgbg");
-        nsMap.put("rdb","http://kse.seu.edu.cn/rdb#");
-        nsMap.put("rdf","http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-        nsMap.put("rdfs","http://www.w3.org/2000/01/rdf-schema#");
-        nsMap.put("owl","http://www.w3.org/2002/07/owl#");
-        nsMap.put("xsd","http://www.w3.org/2001/XMLSchema#");
-        nsMap.put("meta","http://kse.seu.edu.cn/meta#");
-        nsMap.put("wgbq","http://kse.seu.edu.cn/wgbq#");
-        nsMap.put("xgbg","http://kse.seu.edu.cn/xgbg#");
-    }
-
-    /**
-     * 得到一个Uri的前缀,比如'http://www.w3.org/2002/07/owl#DatatypeProperty'的简称是'owl:DatatypeProperty'
-     */
-    public static String getPreLabel(String uri){
-        if(!uri.contains("#")){
-            throw new InvalidParameterException("非合法的uri!");
-        }
-        return nsMap.get(uri.substring(0,uri.indexOf("#") + 1)) + ":" + uri.substring(uri.indexOf("#") + 1);
-    }
     private static CypherNode getWordCypherNode(Words word){
         CypherNode wordNode = null;
         switch (word){
@@ -138,31 +100,32 @@ public class CpElementAppender extends CypherAppender {
         }
         return wordNode;
     }
-    private static CypherRelationship getWordCypherRelation(String relation){
+
+    private static CypherRelationship getWordCypherRelation2(Words relWord){
         CypherRelationship rel = new CypherRightRelationship();
         Set<PropValPair> props = new HashSet<>();
-        switch(relation){
-            case "ISA":{
+        switch(relWord){
+            case RDF_TYPE:{
                 rel.setType("RDF_TYPE");
                 props.add(new PropValPair(propUri,new CypherValue(RDF.type.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDF.type.getURI()))));
             }break;
-            case "RANGE":{
+            case RDFS_RANGE:{
                 rel.setType("RDFS_RANGE");
                 props.add(new PropValPair(propUri,new CypherValue(RDFS.range.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.range.getURI()))));
             }break;
-            case "DOMAIN":{
+            case RDFS_DOMAIN:{
                 rel.setType("RDFS_DOMAIN");
                 props.add(new PropValPair(propUri,new CypherValue(RDFS.domain.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.domain.getURI()))));
             }break;
-            case "RDFS_LABEL":{
+            case RDFS_LABEL:{
                 rel.setType("RDFS_LABEL");
                 props.add(new PropValPair(propUri,new CypherValue(RDFS.range.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.range.getURI()))));
             }break;
-            case "RDFS_COMMENT":{
+            case RDFS_COMMENT:{
                 rel.setType("RDFS_COMMENT");
                 props.add(new PropValPair(propUri,new CypherValue(RDFS.comment.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.comment.getURI()))));
@@ -171,69 +134,52 @@ public class CpElementAppender extends CypherAppender {
         rel.setProperties(props);
         return rel;
     }
-    private static CypherRelationship getWordCypherRelation(CLASS_REL clsRel){
+
+    private static CypherRelationship getWordCypherRelation(Words relWord){
         CypherRelationship rel = new CypherRightRelationship();
         Set<PropValPair> props = new HashSet<>();
-        switch (clsRel){
-            case SUBCLASS_OF:{
+        switch (relWord){
+            case RDFS_SUBCLASSOF:{
                 rel.setType("RDFS_SUBCLASSOF");
                 props.add(new PropValPair(propUri,new CypherValue(RDFS.subClassOf.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.subClassOf.getURI()))));
             }break;
-            case EQUIVALENT_CLASS:{
+            case OWL_EQCLASS:{
                 rel.setType("EQUIVALENT_CLASS");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.equivalentClass.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.equivalentClass.getURI()))));
             }break;
-            case DISJOINT_CLASS:{
+            case OWL_DJCLASS:{
                 rel.setType("DISJOINT_CLASS");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.disjointWith.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.disjointWith.getURI()))));
             }break;
-        }
-        rel.setProperties(props);
-        rel.setName("r");  //TODO:内部实现,先加上元素名称吧
-        return rel;
-    }
-    private static CypherRelationship getWordCypherRelation(PROPERTY_REL proRel){
-        CypherRelationship rel = new CypherRightRelationship();
-        Set<PropValPair> props = new HashSet<>();
-        switch (proRel){
-            case SUBPROPERTY_OF:{
+            case RDFS_SUBPROPERTYOF:{
                 rel.setType("RDFS_SUBPROPERTYOF");
                 props.add(new PropValPair(propUri,new CypherValue(RDFS.subPropertyOf.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(RDFS.subPropertyOf.getURI()))));
             }break;
-            case EQUIVALENT_PROPERTY:{
+            case OWL_EQPROPERTY:{
                 rel.setType("EQUIVALENT_PROPERTY");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.equivalentProperty.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.equivalentProperty.getURI()))));
             }break;
-            case INVERSE_OF:{
-                rel.setType("INVERSE_PROPERTY");
-                props.add(new PropValPair(propUri,new CypherValue(OWL.inverseOf.getURI())));
-                props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.inverseOf.getURI()))));
-            }break;
-            case DISJOINT_PROPERTY:{
+            case OWL_DJPROPERTY:{
                 rel.setType("DISJOINT_PROPERTY");
                 props.add(new PropValPair(propUri,new CypherValue(OWL2.propertyDisjointWith.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL2.propertyDisjointWith.getURI()))));
             }break;
-        }
-        rel.setProperties(props);
-        rel.setName("r");  //TODO:内部实现,先加上元素名称吧
-        return rel;
-    }
-    private static CypherRelationship getWordCypherRelation(INSTANCE_REL insRel){
-        CypherRelationship rel = new CypherRightRelationship();
-        Set<PropValPair> props = new HashSet<>();
-        switch (insRel){
-            case SAME_AS:{
+            case OWL_IVPROPERTY:{
+                rel.setType("INVERSE_PROPERTY");
+                props.add(new PropValPair(propUri,new CypherValue(OWL.inverseOf.getURI())));
+                props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.inverseOf.getURI()))));
+            }break;
+            case OWL_SAME_AS:{
                 rel.setType("SAME_INDIVIDUAL");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.sameAs.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.sameAs.getURI()))));
             }break;
-            case DIFFERENT_FROM:{
+            case OWL_DFINS:{
                 rel.setType("DIFFERENT_INDIVIDUAL");
                 props.add(new PropValPair(propUri,new CypherValue(OWL.differentFrom.getURI())));
                 props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(OWL.differentFrom.getURI()))));
@@ -249,7 +195,7 @@ public class CpElementAppender extends CypherAppender {
      * 语句作用是将定义类、属性、实例这三种基本元素的OWL词汇写入
      * @return
      */
-    public static String initGraphCypher(){
+    public String initBase() throws Exception{
         Cypher cypher = new Cypher();
         List<CypherPath> words = new LinkedList<>();
         words.add(new CypherPath(clsWord));
@@ -464,7 +410,7 @@ public class CpElementAppender extends CypherAppender {
      * @return
      * @throws Exception
      */
-    public String intoRel(OntClass class1,OntClass class2,CLASS_REL rel) throws Exception{
+    public String intoRel(OntClass class1,OntClass class2,Words rel) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
         props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(class1.getURI()))));
@@ -483,13 +429,13 @@ public class CpElementAppender extends CypherAppender {
         props.clear();
         CypherRelationship relation = null;
         switch (rel){
-            case SUBCLASS_OF:{
+            case RDFS_SUBCLASSOF:{
                 relation = subClassOf;
             }break;
-            case EQUIVALENT_CLASS:{
+            case OWL_EQCLASS:{
                 relation = equalClass;
             }break;
-            case DISJOINT_CLASS:{
+            case OWL_DJCLASS:{
                 relation = disjointClass;
             }break;
         }
@@ -506,7 +452,7 @@ public class CpElementAppender extends CypherAppender {
      * @return
      * @throws Exception
      */
-    public String intoRel(OntProperty ontProp1,OntProperty ontProp2,PROPERTY_REL rel) throws Exception{
+    public String intoRel(OntProperty ontProp1,OntProperty ontProp2,Words rel) throws Exception{
         boolean isObj = false;  //对象属性标志
         if(ontProp1.hasProperty(RDF.type,OWL.ObjectProperty)){
             isObj = true;
@@ -529,16 +475,16 @@ public class CpElementAppender extends CypherAppender {
         props.clear();
         CypherRelationship relation = null;
         switch (rel){
-            case SUBPROPERTY_OF:{
+            case RDFS_SUBPROPERTYOF:{
                 relation = subPropertyOf;
             }break;
-            case EQUIVALENT_PROPERTY:{
+            case OWL_EQPROPERTY:{
                 relation = equalProperty;
             }break;
-            case DISJOINT_PROPERTY:{
+            case OWL_DJPROPERTY:{
                 relation = disjointProperty;
             }break;
-            case INVERSE_OF:{
+            case OWL_IVPROPERTY:{
                 relation = inverseProperty;
             }break;
         }
@@ -555,7 +501,7 @@ public class CpElementAppender extends CypherAppender {
      * @return
      * @throws Exception
      */
-    public String intoRel(Individual ins1,Individual ins2,INSTANCE_REL rel) throws Exception{
+    public String intoRel(Individual ins1,Individual ins2,Words rel) throws Exception{
         Cypher cypher = new Cypher();
         Set<PropValPair> props = new HashSet<>();
         props.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(ins1.getURI()))));
@@ -574,10 +520,10 @@ public class CpElementAppender extends CypherAppender {
         props.clear();
         CypherRelationship relation = null;
         switch (rel){
-            case SAME_AS:{
+            case OWL_SAME_AS:{
                 relation = sameIns;
             }break;
-            case DIFFERENT_FROM:{
+            case OWL_DFINS:{
                 relation = differentIns;
             }break;
         }

@@ -3,7 +3,7 @@ package TaskThread;
 import Model.Relation;
 import org.apache.jena.ontology.OntClass;
 import rdfImporter.ClassImporter;
-import util.CLASS_REL;
+import util.Words;
 
 import java.util.Queue;
 
@@ -12,10 +12,10 @@ import java.util.Queue;
  */
 public class ImportClassRelThread implements Runnable {
 
-    private final Queue<Relation<OntClass, CLASS_REL>> rels;
+    private final Queue<Relation<OntClass, Words>> rels;
     private final ClassImporter importer;
 
-    public ImportClassRelThread(Queue<Relation<OntClass, CLASS_REL>> rels,ClassImporter importer){
+    public ImportClassRelThread(Queue<Relation<OntClass, Words>> rels,ClassImporter importer){
         this.rels = rels;
         this.importer = importer;
     }
@@ -23,7 +23,7 @@ public class ImportClassRelThread implements Runnable {
     @Override
     public void run() {
         try{
-            Relation<OntClass, CLASS_REL> rel = null;
+            Relation<OntClass, Words> rel = null;
             while(!rels.isEmpty()){
                 rel = rels.poll();
                 if(!importer.loadClassRelIn(rel.getFirst(),rel.getSecond(),rel.getRel())){

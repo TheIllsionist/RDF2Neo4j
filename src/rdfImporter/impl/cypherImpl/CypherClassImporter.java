@@ -1,7 +1,6 @@
 package rdfImporter.impl.cypherImpl;
 
-import Appender.impl.CpElementAppender;
-import Appender.impl.CypherAppender;
+import Appender.*;
 import connection.Neo4jConnection;
 import org.apache.jena.ontology.OntClass;
 import org.neo4j.driver.v1.StatementResult;
@@ -10,26 +9,30 @@ import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.ClassImporter;
 import rdfImporter.cache.ClassCache;
-import util.CLASS_REL;
+import util.Words;
 
 public class CypherClassImporter implements ClassImporter{
 
-    private final CypherAppender appender;
+    private Appender appender;
 
-    public CypherClassImporter(CypherAppender appender){
+    public CypherClassImporter(Appender appender){
+        this.appender = appender;
+    }
+
+    public void setAppender(Appender appender){
         this.appender = appender;
     }
 
     /**
      * 将本体类导入Neo4j数据库
-     * 多个线程将类写入知识库和类缓存,必须要保证每个线程所写入的类集间互不相交,即可在该方法中存在“先检查-后执行”竞态条件下,仍能保证线程安全性
+     * 多线程将类写数据库和类缓存,由于方法中存在“先检查-后执行”竞态条件,因此必须要保证每个线程所写入的类集间互不相交才可保证不重复写
      * @param ontClass
      * @return
      * @throws Exception
      */
     public boolean loadClassIn(OntClass ontClass) throws Exception{
-        String preLabel = CpElementAppender.getPreLabel(ontClass.getURI());
-        if(!ClassCache.classContained(preLabel)){ //当前数据库中不存在该类
+        String preLabel = appender.getPreLabel(ontClass.getURI());
+        if(!ClassCache.classContained(preLabel)){ //当前数据库中不存在该类,注意此处存在竞态条件
             try{
                 String cypher = appender.intoCls(ontClass);  //拼接Cypher语句,可能属于耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
@@ -40,32 +43,32 @@ public class CypherClassImporter implements ClassImporter{
                     }
                 });
                 ClassCache.addClass(preLabel);  //写缓存
-            }catch (NoSuchRecordException nRec){  //可能因为图未经初始化所以返回空集
-                System.out.println("Import failure of class: " + CpElementAppender.getPreLabel(ontClass.getURI()) +
+            }catch (NoSuchRecordException nRec){  //可能由于图数据库未经词汇初始化而报错
+                System.out.println("Import failure of class: " + appender.getPreLabel(ontClass.getURI()) +
                         ". Maybe because of lack of initialization.");
                 throw nRec;
             }
         }
-        return true;  //TODO:目前先实现返回true
+        return true;  //数据库中早已存在该类或写入成功
     }
 
     /**
      * 将两个本体类之间的关系导入Neo4j数据库
-     * 多个线程将关系写入知识库和缓存,必须要保证每个线程所写入的类关系集间互不相交,即可在该方法中存在“先检查-后执行”竞态条件下,仍能保证线程安全性
+     * 多线程将关系写知识库和写缓存,由于方法中存在“先检查-后执行”竞态条件,因此必须要保证每个线程所写入的类关系集间互不相交才可保证不重复写
      * @param class1
      * @param class2
      * @param rel
      * @return
      * @throws Exception
      */
-    public boolean loadClassRelIn(OntClass class1, OntClass class2, CLASS_REL rel) throws Exception {
-        String fPre = CpElementAppender.getPreLabel(class1.getURI());
-        String lPre = CpElementAppender.getPreLabel(class2.getURI());
+    public boolean loadClassRelIn(OntClass class1, OntClass class2, Words rel) throws Exception {
+        String fPre = appender.getPreLabel(class1.getURI());
+        String lPre = appender.getPreLabel(class2.getURI());
         //写关系的两个类必须要先存在与知识库中
         if(!ClassCache.classContained(fPre) || !ClassCache.classContained(lPre))
             return false;
         //如果关系不存在,则写知识库然后写缓存
-        if(!ClassCache.relExisted(fPre,lPre)){
+        if(!ClassCache.relExisted(fPre,lPre)){  //注意此处存在竞态条件
             String cypher = appender.intoRel(class1,class2,rel);  //拼接Cypher语句,可能是耗时操作
             Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                 @Override
@@ -76,11 +79,11 @@ public class CypherClassImporter implements ClassImporter{
             });
             int tag = -1;
             switch (rel){
-                case SUBCLASS_OF : tag = 1;break;
-                case DISJOINT_CLASS : tag = 2;break;
-                case EQUIVALENT_CLASS : tag = 3;break;
+                case RDFS_SUBCLASSOF : tag = 1;break;
+                case OWL_DJCLASS : tag = 2;break;
+                case OWL_EQCLASS : tag = 3;break;
             }
-            ClassCache.addRelation(fPre,lPre,tag);
+            ClassCache.addRelation(fPre,lPre,tag);  //写缓存
         }
         //无论是已经存在还是已经写入,返回true
         return true;
