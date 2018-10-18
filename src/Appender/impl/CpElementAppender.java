@@ -387,10 +387,16 @@ public class CpElementAppender extends Appender {
         ExtendedIterator<OntClass> clses = individual.listOntClasses(true);  //这里列出了实例直接所属的类
         node.setLabel("OWL_CLASS");
         while(clses.hasNext()){
+            OntClass tCls = null;
+            try{
+                tCls = clses.next();
+            }catch (ConversionException e){  //由于NamedIndividual的存在,需要处理这个细节
+                continue;
+            }
             node.setName("c" + cC++);
-            node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(clses.next().getURI()))));
+            node.addCondition(new PropValPair(propPreLabel,new CypherValue(getPreLabel(tCls.getURI()))));
             cypher.match(node);  //查询出该类
-            node.getProperties().clear();
+            node.setProperties(new HashSet<>());
         }
         node.setLabel(null);
         while(cC > 0){

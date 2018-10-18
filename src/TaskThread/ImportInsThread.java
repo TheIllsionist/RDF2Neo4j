@@ -9,7 +9,7 @@ import java.util.Queue;
  */
 public class ImportInsThread implements Runnable{
 
-    private final Queue<Individual> individuals;  //一批任务
+    private final Queue<Individual> individuals;  //一批实例导入任务
     private final InsImporter importer;  //导入器
 
     public ImportInsThread(Queue<Individual> individuals, InsImporter importer){

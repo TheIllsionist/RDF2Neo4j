@@ -1,17 +1,12 @@
 package Appender;
 
-import cypherelement.basic.CypherPath;
-import cypherelement.clause.Cypher;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.ObjectProperty;
 import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntProperty;
 import util.Words;
-
 import java.security.InvalidParameterException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by The Illsionist on 2018/8/28.

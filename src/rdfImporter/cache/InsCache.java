@@ -1,11 +1,9 @@
 package rdfImporter.cache;
 
 import connection.Neo4jConnection;
-import org.apache.jena.ontology.Individual;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
 import java.util.concurrent.ConcurrentHashMap;
-
 
 /**
  * Created by The Illsionist on 2018/8/16.
@@ -15,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InsCache {
 
     private final static int DEFAULT_INSCOUNT = 3000;  //TODO:默认初始容量的选择还有待调研
-    private final static ConcurrentHashMap<String,Individual> individuals = new ConcurrentHashMap<>();
+    private final static ConcurrentHashMap<String,Object> individuals = new ConcurrentHashMap<>();
 
     static {  //缓存所有已在数据库中存在的实例
         Record rec = null;
@@ -23,7 +21,9 @@ public class InsCache {
         while(mRst.hasNext()){
             rec = mRst.next();
             String ins = rec.get(0).asString();
-            individuals.put(ins,null);
+            if(ins == null || ins.equals("null"))  //防止null值出现
+                continue;
+            individuals.put(ins,new Object());
         }
     }
 
@@ -41,7 +41,7 @@ public class InsCache {
      * @param preLabel
      */
     public static void addIndividual(String preLabel){
-        individuals.put(preLabel,null);
+        individuals.put(preLabel,new Object());  //ConcurrentHashMap的key和value都不能为空
     }
 
 }

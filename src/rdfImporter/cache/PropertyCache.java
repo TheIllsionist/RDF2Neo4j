@@ -45,7 +45,7 @@ public class PropertyCache {
                 propWithRels.put(proPre,new ConcurrentHashMap<>());
             }
             String anoProPre = rec.get(2).asString();
-            if(anoProPre == null||anoProPre.equals("null"))
+            if(anoProPre == null||anoProPre.equals("null")) //防止第2个参数为空的意外情况出现
                 continue;
             propWithRels.get(proPre).put(anoProPre,rec.get(1).asInt());
         }

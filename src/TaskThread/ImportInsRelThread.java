@@ -12,8 +12,8 @@ import java.util.Queue;
  */
 public class ImportInsRelThread implements Runnable{
 
-    private final Queue<Relation<Individual, ObjectProperty>> rels;
-    private final InsImporter importer;
+    private final Queue<Relation<Individual, ObjectProperty>> rels;  //一批实例关系导入任务
+    private final InsImporter importer;  //导入器
 
     public ImportInsRelThread(Queue<Relation<Individual, ObjectProperty>> rels,InsImporter importer){
         this.rels = rels;

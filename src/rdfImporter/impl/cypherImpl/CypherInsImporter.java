@@ -36,7 +36,11 @@ public class CypherInsImporter implements InsImporter{
             String ins1 = rec.get(0).asString();
             String rel = rec.get(1).asString();
             String ins2 = rec.get(2).asString();
-            //TODO:这里可能会出问题,因为insRels没存入任何东西之前没办法get到东西
+            if(ins1 == null || ins2 == null || ins1.equals("null") || ins2.equals("null"))  //没有preLabel的空节点会造成此现象出现
+                continue;
+            if(!insRels.containsKey(ins1)){
+                insRels.put(ins1,new HashMap<>());
+            }
             if(!insRels.get(ins1).containsKey(ins2)){
                 insRels.get(ins1).put(ins2,new HashSet<>());
             }
@@ -78,6 +82,9 @@ public class CypherInsImporter implements InsImporter{
                 System.out.println("Import failure of individual: " + appender.getPreLabel(individual.getURI()) +
                         ". Maybe because of lack of initialization.");
                 throw nRec;
+            }catch (Exception e){
+                System.out.println("导入实例: " + preLabel + "失败");
+                throw e;
             }
         }
         return true;
