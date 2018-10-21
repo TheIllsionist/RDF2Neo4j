@@ -246,10 +246,7 @@ public class CpElementAppender extends Appender {
      * @throws Exception
      */
     public String intoProp(OntProperty ontProperty) throws Exception{
-        boolean isObj = false;    //是否为对象属性
-        if(ontProperty.hasProperty(RDF.type,OWL.ObjectProperty)){
-            isObj = true;
-        }
+        boolean isObj = ontProperty.isObjectProperty();
         Cypher cypher = new Cypher();
         CypherNode prop = new CypherNode("prop");  //代表属性的结点
         Set<CypherCondition> propProps = new HashSet<>();
