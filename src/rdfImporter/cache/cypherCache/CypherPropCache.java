@@ -1,4 +1,4 @@
-package rdfImporter.cache;
+package rdfImporter.cache.cypherCache;
 
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 两个属性间的4种关系是互斥存在的,即假如属性A是属性B的子属性,则属性A与属性B之间不会再有其他关系
  */
 @ThreadSafe
-public class PropertyCache {
+public class CypherPropCache {
 
     private final static int DEFAULT_CAPACITY = 5460;  //TODO:默认初始容量的选择还有待调研
 

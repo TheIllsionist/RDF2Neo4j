@@ -1,4 +1,4 @@
-package rdfImporter.cache;
+package rdfImporter.cache.cypherCache;
 
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 两个类间的3种关系是互斥存在的,即假如类A是类B的子类,则类A与类B之间不会再有其他关系
  */
 @ThreadSafe  //只有在特定的使用该缓存的方式下才满足线程安全性
-public class ClassCache {
+public class CypherClassCache {
 
     private final static int DEFAULT_CAPACITY = 682;  //TODO:默认初始容量的选择还有待调研
 

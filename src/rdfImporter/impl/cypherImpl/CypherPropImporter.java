@@ -8,7 +8,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.PropImporter;
-import rdfImporter.cache.PropertyCache;
+import rdfImporter.cache.cypherCache.CypherPropCache;
 import util.Words;
 
 public class CypherPropImporter implements PropImporter {
@@ -28,7 +28,7 @@ public class CypherPropImporter implements PropImporter {
      */
     public boolean loadPropertyIn(OntProperty ontProperty) throws Exception{
         String preLabel = appender.getPreLabel(ontProperty.getURI());
-        if(!PropertyCache.isPropertyContained(preLabel)){ //当前数据库中不存在该属性
+        if(!CypherPropCache.isPropertyContained(preLabel)){ //当前数据库中不存在该属性
             try {
                 String cypher = appender.intoProp(ontProperty); //拼接Cypher语句,可能是耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
@@ -38,7 +38,7 @@ public class CypherPropImporter implements PropImporter {
                         return mRst.single().get(0).asInt();
                     }
                 });
-                PropertyCache.addProperty(preLabel); //写缓存
+                CypherPropCache.addProperty(preLabel); //写缓存
             }catch (NoSuchRecordException nRec){
                 System.out.println("Import failure of property: " + appender.getPreLabel(ontProperty.getURI()) +
                         ". Maybe because of lack of initialization.");
@@ -62,10 +62,10 @@ public class CypherPropImporter implements PropImporter {
         String fPre = appender.getPreLabel(prop1.getURI());
         String lPre = appender.getPreLabel(prop2.getURI());
         //写关系的两个属性必须要先存在于知识库中
-        if(!PropertyCache.isPropertyContained(fPre) || !PropertyCache.isPropertyContained(lPre))
+        if(!CypherPropCache.isPropertyContained(fPre) || !CypherPropCache.isPropertyContained(lPre))
             return false;
         //如果关系不存在,则写知识库然后写缓存
-        if(!PropertyCache.isRelExisted(fPre,lPre)){
+        if(!CypherPropCache.isRelExisted(fPre,lPre)){
             String cypher = appender.intoRel(prop1,prop2,rel);  //拼接Cypher语句,耗时操作
             Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                 @Override
@@ -81,7 +81,7 @@ public class CypherPropImporter implements PropImporter {
                 case OWL_DJPROPERTY : tag = 3;break;
                 case OWL_IVPROPERTY : tag = 4;break;
             }
-            PropertyCache.addRelation(fPre,lPre,tag); //写缓存
+            CypherPropCache.addRelation(fPre,lPre,tag); //写缓存
         }
         //无论是已经存在还是已经写入,返回true
         return true;

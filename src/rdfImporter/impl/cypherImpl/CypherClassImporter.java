@@ -8,7 +8,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.ClassImporter;
-import rdfImporter.cache.ClassCache;
+import rdfImporter.cache.cypherCache.CypherClassCache;
 import util.Words;
 
 public class CypherClassImporter implements ClassImporter{
@@ -32,7 +32,7 @@ public class CypherClassImporter implements ClassImporter{
      */
     public boolean loadClassIn(OntClass ontClass) throws Exception{
         String preLabel = appender.getPreLabel(ontClass.getURI());
-        if(!ClassCache.classContained(preLabel)){ //当前数据库中不存在该类,注意此处存在竞态条件
+        if(!CypherClassCache.classContained(preLabel)){ //当前数据库中不存在该类,注意此处存在竞态条件
             try{
                 String cypher = appender.intoCls(ontClass);  //拼接Cypher语句,可能属于耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
@@ -42,7 +42,7 @@ public class CypherClassImporter implements ClassImporter{
                         return mRst.single().get(0).asInt();
                     }
                 });
-                ClassCache.addClass(preLabel);  //写缓存
+                CypherClassCache.addClass(preLabel);  //写缓存
             }catch (NoSuchRecordException nRec){  //可能由于图数据库未经词汇初始化而报错
                 System.out.println("Import failure of class: " + appender.getPreLabel(ontClass.getURI()) +
                         ". Maybe because of lack of initialization.");
@@ -65,10 +65,10 @@ public class CypherClassImporter implements ClassImporter{
         String fPre = appender.getPreLabel(class1.getURI());
         String lPre = appender.getPreLabel(class2.getURI());
         //写关系的两个类必须要先存在与知识库中
-        if(!ClassCache.classContained(fPre) || !ClassCache.classContained(lPre))
+        if(!CypherClassCache.classContained(fPre) || !CypherClassCache.classContained(lPre))
             return false;
         //如果关系不存在,则写知识库然后写缓存
-        if(!ClassCache.relExisted(fPre,lPre)){  //注意此处存在竞态条件
+        if(!CypherClassCache.relExisted(fPre,lPre)){  //注意此处存在竞态条件
             String cypher = appender.intoRel(class1,class2,rel);  //拼接Cypher语句,可能是耗时操作
             Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
                 @Override
@@ -83,7 +83,7 @@ public class CypherClassImporter implements ClassImporter{
                 case OWL_DJCLASS : tag = 2;break;
                 case OWL_EQCLASS : tag = 3;break;
             }
-            ClassCache.addRelation(fPre,lPre,tag);  //写缓存
+            CypherClassCache.addRelation(fPre,lPre,tag);  //写缓存
         }
         //无论是已经存在还是已经写入,返回true
         return true;

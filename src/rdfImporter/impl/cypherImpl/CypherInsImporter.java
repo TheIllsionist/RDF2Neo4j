@@ -13,7 +13,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.InsImporter;
-import rdfImporter.cache.InsCache;
+import rdfImporter.cache.cypherCache.CypherInsCache;
 import util.Words;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +67,7 @@ public class CypherInsImporter implements InsImporter{
     @Override
     public boolean loadInsIn(Individual individual) throws Exception {
         String preLabel = appender.getPreLabel(individual.getURI());
-        if(!InsCache.insContained(preLabel)){  //知识库中不存在该实例,此处存在“先检查-后执行”竞态条件
+        if(!CypherInsCache.insContained(preLabel)){  //知识库中不存在该实例,此处存在“先检查-后执行”竞态条件
             try{
                 String cypher = appender.intoIns(individual);  //拼接Cypher语句,可能属于耗时操作
                 Neo4jConnection.getSession().writeTransaction(new TransactionWork<Integer>() { //写知识库,耗时
@@ -77,7 +77,7 @@ public class CypherInsImporter implements InsImporter{
                         return mRst.single().get(0).asInt();
                     }
                 });
-                InsCache.addIndividual(preLabel);  //写实例缓存
+                CypherInsCache.addIndividual(preLabel);  //写实例缓存
             }catch (NoSuchRecordException nRec){
                 System.out.println("Import failure of individual: " + appender.getPreLabel(individual.getURI()) +
                         ". Maybe because of lack of initialization.");
@@ -123,7 +123,7 @@ public class CypherInsImporter implements InsImporter{
         String pre2 = appender.getPreLabel(ins2.getURI());
         String rel = appender.getPreLabel(property.getURI());
         //写关系的两个实例必须要先存在于知识库中
-        if(!InsCache.insContained(pre1) || !InsCache.insContained(pre2)){
+        if(!CypherInsCache.insContained(pre1) || !CypherInsCache.insContained(pre2)){
             return false;
         }
         relLock.writeLock().lock();  //获得写锁
@@ -158,7 +158,7 @@ public class CypherInsImporter implements InsImporter{
         String pre2 = appender.getPreLabel(ins2.getURI());
         String uriRel = rel == Words.OWL_SAME_AS ? appender.getPreLabel(OWL.sameAs.getURI()) : appender.getPreLabel(OWL.differentFrom.getURI());
         //写关系的两个实例必须要先存在于知识库中
-        if(!InsCache.insContained(pre1) || !InsCache.insContained(pre2)){
+        if(!CypherInsCache.insContained(pre1) || !CypherInsCache.insContained(pre2)){
             return false;
         }
         relLock.writeLock().lock();  //获得写锁
