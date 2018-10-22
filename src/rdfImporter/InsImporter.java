@@ -8,6 +8,7 @@ import util.Words;
  * Created by The Illsionist on 2018/8/13.
  */
 public interface InsImporter {
+
     /**
      * 将实例导入数据库
      * @param individual
@@ -35,4 +36,5 @@ public interface InsImporter {
      * @throws Exception
      */
     public boolean loadInsRelIn(Individual ins1, Individual ins2, Words rel) throws Exception;
+
 }

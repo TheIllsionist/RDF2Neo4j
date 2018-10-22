@@ -4,7 +4,6 @@ import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.StatementResult;
-
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CypherPropCache {
 
     private final static int DEFAULT_CAPACITY = 5460;  //TODO:默认初始容量的选择还有待调研
-
     /** 利用静态初始化器保证对象引用的可见性,当前实现为只缓存每个属性的preLabel,当前初始容量默认为5460 **/
     private final static ConcurrentHashMap<String,ConcurrentHashMap<String,Integer>> propWithRels = new ConcurrentHashMap<>(84);
 
