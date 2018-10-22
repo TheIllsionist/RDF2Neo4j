@@ -80,8 +80,8 @@ public class CypherClassImporter implements ClassImporter{
             int tag = -1;
             switch (rel){
                 case RDFS_SUBCLASSOF : tag = 1;break;
-                case OWL_DJCLASS : tag = 2;break;
-                case OWL_EQCLASS : tag = 3;break;
+                case OWL_EQCLASS : tag = 2;break;
+                case OWL_DJCLASS : tag = 3;break;
             }
             CypherClassCache.addRelation(fPre,lPre,tag);  //写缓存
         }
