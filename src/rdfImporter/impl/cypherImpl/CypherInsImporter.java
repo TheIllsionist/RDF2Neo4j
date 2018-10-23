@@ -57,6 +57,7 @@ public class CypherInsImporter implements InsImporter{
     public void setAppender(Appender appender){
         this.appender = appender;
     }
+
     /**
      * 将某一实例写入Neo4j数据库,会有多个线程调用此方法
      * 由于方法中存在“先检查-后执行”竞态条件,因此必须要保证每个线程所写入的实例集间互不相交才可保证不重复写
