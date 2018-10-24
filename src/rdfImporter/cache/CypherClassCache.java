@@ -1,4 +1,4 @@
-package rdfImporter.cache.cypherCache;
+package rdfImporter.cache;
 
 import concurrentannotation.ThreadSafe;
 import connection.Neo4jConnection;

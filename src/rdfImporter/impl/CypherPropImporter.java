@@ -1,4 +1,4 @@
-package rdfImporter.impl.cypherImpl;
+package rdfImporter.impl;
 
 import Appender.*;
 import connection.Neo4jConnection;
@@ -8,7 +8,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.PropImporter;
-import rdfImporter.cache.cypherCache.CypherPropCache;
+import rdfImporter.cache.CypherPropCache;
 import util.Words;
 
 public class CypherPropImporter implements PropImporter {

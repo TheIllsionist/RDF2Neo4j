@@ -1,4 +1,4 @@
-package rdfImporter.cache.cypherCache;
+package rdfImporter.cache;
 
 import connection.Neo4jConnection;
 import org.neo4j.driver.v1.Record;

@@ -9,7 +9,7 @@ import datasource.RdfProvider;
 import datasource.impl.FileRdfProvider;
 import org.apache.jena.ontology.OntClass;
 import rdfImporter.ClassImporter;
-import rdfImporter.impl.cypherImpl.CypherClassImporter;
+import rdfImporter.impl.CypherClassImporter;
 import util.Words;
 import java.util.Queue;
 

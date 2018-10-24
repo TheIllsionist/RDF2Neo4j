@@ -1,4 +1,4 @@
-package rdfImporter.impl.cypherImpl;
+package rdfImporter.impl;
 
 import Appender.*;
 import concurrentannotation.GuardedBy;
@@ -13,7 +13,7 @@ import org.neo4j.driver.v1.Transaction;
 import org.neo4j.driver.v1.TransactionWork;
 import org.neo4j.driver.v1.exceptions.NoSuchRecordException;
 import rdfImporter.InsImporter;
-import rdfImporter.cache.cypherCache.CypherInsCache;
+import rdfImporter.cache.CypherInsCache;
 import util.Words;
 import java.util.HashMap;
 import java.util.HashSet;
