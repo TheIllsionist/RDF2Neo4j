@@ -37,7 +37,7 @@ public class AllTest {
         ImportClassRelThread clsRelIn = new ImportClassRelThread(clsRels,clsIpt);
         new Thread(clsRelIn).start();
         tCount++;
-        System.out.println("启动线程 " + tCount + " :, 导入所有的类间关系");
+        System.out.println("启动线程 " + tCount + " , 导入所有的类间关系");
         //导入属性及属性间关系
         PropImporter propIpt = new CypherPropImporter(appender);
         Queue<OntProperty> props = rdfProvider.allOntProperties();
@@ -46,10 +46,10 @@ public class AllTest {
         ImportPropRelThread propRelIn = new ImportPropRelThread(propRels,propIpt);
         new Thread(propIn).start();
         tCount++;
-        System.out.println("启动线程 " + tCount + " :,导入所有属性");
+        System.out.println("启动线程 " + tCount + " , 导入所有属性");
         new Thread(propRelIn).start();
         tCount++;
-        System.out.println("启动线程 " + tCount + " :,导入所有的属性间关系");
+        System.out.println("启动线程 " + tCount + " , 导入所有的属性间关系");
         //导入实例及实例间关系
         InsImporter insIpt = new CypherInsImporter(appender);
         Queue<Individual> inses = rdfProvider.allIndividuals();
@@ -62,7 +62,7 @@ public class AllTest {
             }
             new Thread(new ImportInsThread(tmp,insIpt)).start();  //启动一个线程
             tCount++;
-            System.out.println("启动线程 " + tCount + " :,导入 " + (300 - (insCount + 1)) + " 个实例");
+            System.out.println("启动线程 " + tCount + " , 导入 " + (300 - (insCount + 1)) + " 个实例");
             if(inses.isEmpty())
                 break;
             insCount = 300;
@@ -77,7 +77,7 @@ public class AllTest {
             }
             new Thread(new ImportInsRelThread(tmp,insIpt)).start();
             tCount++;
-            System.out.println("启动线程 " + tCount + " :,导入 " + (300 - (insRelCount + 1)) + " 条实例关系");
+            System.out.println("启动线程 " + tCount + " , 导入 " + (300 - (insRelCount + 1)) + " 条实例关系");
             if(insObjRels.isEmpty())
                 break;
             insRelCount = 300;
