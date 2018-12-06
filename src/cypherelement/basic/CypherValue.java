@@ -15,25 +15,25 @@ public class CypherValue implements ToCypher {
     private int valFormat = 0;  //值的格式,0表示单值,1表示List,2表示Map
 
     public CypherValue(String value){
-        this(value,DataType.STR);
+        this(value,DataType.STR,0);
     }
 
     public CypherValue(int value){
-        this(value,DataType.INT);
+        this(value,DataType.INT,0);
     }
 
     public CypherValue(double value){
-        this(value,DataType.DOUBLE);
+        this(value,DataType.DOUBLE,0);
     }
 
-    public CypherValue(Object value,DataType dataType){
+    public CypherValue(Object value,DataType dataType,int valFormat){
         this.value = value;
         this.dataType = dataType;
-        if(value instanceof List){
-            valFormat = 1;
-        }
-        if(value instanceof Map){
-            valFormat = 2;
+        this.valFormat = valFormat;
+        if(valFormat == 0){  //在要求单值格式情况下传入一个List的时候需要提取值
+            if(this.value instanceof List){
+                this.value = ((List) this.value).get(0);
+            }
         }
     }
 

@@ -358,14 +358,14 @@ public class CpElementAppender extends Appender {
                 }
                 if(dpVals.size() == 0)  //此数据类型属性没有值,跳过
                     continue;
-                node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(dpVals,DataType.STR)));
+                node.addCondition(new PropValPair(new CypherProperty("value"),new CypherValue(dpVals,DataType.STR,0)));
                 //提取并记录第二元的属性labels,uri,preLabel
                 Iterator<RDFNode> labelIter = oDp.listLabels(null);
                 while(labelIter.hasNext()){
                     dpLabels.add(labelIter.next().toString());
                 }
-                if(dpLabels.size() > 0){    //如果该DP有preLabel,就加上
-                    dpProps.add(new PropValPair(new CypherProperty("`rdfs:label`"),new CypherValue(dpLabels,DataType.STR)));
+                if(dpLabels.size() > 0){    //如果该DP有rdfs:label,就加上
+                    dpProps.add(new PropValPair(new CypherProperty("`rdfs:label`"),new CypherValue(dpLabels,DataType.STR,1)));
                 }
                 dpProps.add(new PropValPair(propUri,new CypherValue(oDp.getURI())));
                 dpProps.add(new PropValPair(propPreLabel,new CypherValue(getPreLabel(oDp.getURI()))));
@@ -573,7 +573,7 @@ public class CpElementAppender extends Appender {
             labelVals.add(labels.next().asLiteral().getString());
         }
         if(labelVals.size() != 0){
-            props.add(new PropValPair(new CypherProperty("`rdfs:label`"),new CypherValue(labelVals,DataType.STR)));
+            props.add(new PropValPair(new CypherProperty("`rdfs:label`"),new CypherValue(labelVals,DataType.STR,1)));
         }
         relation.setProperties(props);
         CypherPath path = new CypherPath(i1).connectThrough(relation).with(i2);
